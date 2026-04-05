@@ -1,102 +1,30 @@
 schema: spec-driven
 
 # =============================================================================
-# DragBuilder 开发准则 (Development Constitution)
+# DragBuilder OpenSpec 配置文件
 # =============================================================================
-# 本文件是项目的"开发宪法"，定义了所有开发活动必须遵循的核心规范。
-# AI 助手在执行任何任务前必须阅读并遵循本文件的规则。
+# 本文件专门用于约束 OpenSpec 需求工作流 (Proposal -> Specs -> Design -> Tasks)。
+# 代码实现层的具体约束，请参考项目根目录的 CLAUDE.md。
 # =============================================================================
 
-# ---------------------------------------------------------------------------
-# 1. 项目上下文 (Project Context)
-# ---------------------------------------------------------------------------
 context: |
-  ## 技术栈 (Tech Stack)
+  # 项目总览 (Project Overview)
+  本项目为 DragBuilder (全栈可视化拖拽页面构建器)。
 
-  ### 前端 (drag-builder-react)
-  - React 19 + Vite 7 + TypeScript 5.9 (strict)
-  - Tailwind CSS 4 (禁止内联 CSS，动态坐标除外)
-  - 状态管理: Zustand 5 + Immer 11
-  - 拖拽: @dnd-kit/core 6
-  - 动画: Framer Motion 12
-  - 路由: React Router DOM 7
-  - HTTP: Axios 1
+  # ⚠️ 核心前置依赖 (Critical Dependency)
+  关于本项目的具体技术栈 (React 19, NestJS 11 等)、代码规范、文件命名、目录结构、测试自检命令以及 **Git 工作流规范**，已统一收拢于项目根目录的 `CLAUDE.md`。
 
-  ### 后端 (drag-builder-server)
-  - NestJS 11 + TypeORM 0.3
-  - 数据库: PostgreSQL 16+ (JSONB 存储 canvas_config 和 components_tree)
-  - 验证: class-validator 0.14 + class-transformer 0.5
+  **最高指令**：在执行任何规划、编码或提交任务前，你必须**优先且严格遵守 `CLAUDE.md`** 中的所有纪律要求。
 
-  ## 核心约定 (Core Conventions)
-
-  ### 文件命名
-  - React 组件: PascalCase (ComponentNode.tsx)
-  - React Hooks: use + PascalCase (useKeyboardShortcuts.ts)
-  - Zustand Store: camelCase + Store 后缀 (componentStore.ts)
-  - 工具函数: camelCase (snapping.ts, timing.ts)
-  - NestJS 模块: kebab-case (project.module.ts)
-  - NestJS 类: PascalCase (ProjectController.ts)
-
-  ### Import 顺序 (React)
-  1. React 核心 (import React from 'react')
-  2. React 库 (useState, useEffect 等)
-  3. @dnd-kit 相关
-  4. 组件库/第三方组件
-  5. 本项目组件 (../components/...)
-  6. Store (../store/...)
-  7. 类型 (../types/...)
-  8. 工具 (../utils/...)
-  9. API (../api/...)
-  10. 相对路径组件
-
-  ### Import 顺序 (NestJS)
-  1. @nestjs 相关的 imports
-  2. typeorm 相关的 imports
-  3. 其他第三方库
-  4. 本地模块 imports (./modules/..., ./config/..., ./common/...)
-
-  ### 代码风格
-  - 格式化: Prettier (单引号、带分号、2空格缩进、尾随逗号 es5)
-  - 静态检查: ESLint 9+ (严禁使用 any)
-  - 函数式组件: 箭头函数 const Comp: React.FC = () => ...
-  - 状态更新: 必须使用 Immer，通过 set(state => { ... }) 进行不可变更新
-  - 异步处理: 所有数据库操作必须 await
-  - JSDoc: 所有导出函数/类必须包含中文 JSDoc 注释
-
-  ## 关键规范 (Critical Rules)
-
-  ### 严禁事项
-  - 严禁使用 any 类型（除非底层逻辑确实无法定义类型，且需添加说明）
-  - 严禁在 React 组件中写内联 CSS（动态坐标除外，必须用 Tailwind）
-  - 严禁直接修改 state（必须通过 set(state => { ... })）
-  - 严禁绕过 ESLint 检查 (除非有充足理由)
-  - 严禁硬编码凭据（使用 .env 和环境变量）
-  - 严禁提交带 Lint 报错的代码
-  - 严禁在需求尚未清晰之前进行任何编辑修改操作
-
-  ### 强制执行
-  - AI 助手在修改任何代码后，必须主动运行 lint 自检:
-    - 前端: cd drag-builder-react && npm run lint
-    - 后端: cd drag-builder-server && npm run lint
-  - 所有导出函数/类必须包含 JSDoc 注释
-  - API 接口变更必须同步更新 docs/API.md
-  - 核心业务变更必须同步检查并更新 docs/DOMAIN.md
-
-  ### 阅读顺序
-  - **首先**阅读项目根目录的 CLAUDE.md
-  - 根据任务类型**按需**读取 docs/ 目录下的文档:
-    - 前后端接口对接、Axios 封装 → docs/API.md
-    - 画布坐标计算、吸附算法、Zustand 状态流转 → docs/DOMAIN.md
-    - 富文本/HTML 组件、用户输入内容渲染 → docs/SECURITY.md
+  # OpenSpec 工作流纪律 (Workflow Discipline)
+  - 在需求未通过 Proposal -> Specs -> Design -> Tasks 完整流程并得到确认前，严禁直接修改或生成任何业务代码。
+  - 在生成对应的规划文档制品时，必须严格遵守下方的 `rules`。
 
 # ---------------------------------------------------------------------------
-# 2. Per-Artifact 规则 (Per-Artifact Rules)
+# Per-Artifact 规则 (Per-Artifact Rules)
 # ---------------------------------------------------------------------------
 rules:
 
-  # -------------------------------------------------------------------------
-  # OpensSpec Artifacts
-  # -------------------------------------------------------------------------
   proposal:
     - 提案内容控制在 800 词以内
     - 必须包含"Non-goals"（非目标）章节
@@ -104,14 +32,7 @@ rules:
     - 必须包含"Impact"（影响）章节，说明前端/后端/数据库变更
     - 所有描述使用中文
 
-  tasks:
-    - 任务拆分为带 [ ] 复选框的可执行项
-    - 已完成项标记为 [x]
-    - 每个任务必须可独立测试
-    - 包含验证步骤 (npm run lint, npm run test 等)
-    - 相关子任务按编号分组
-
-  spec:
+  specs:
     - 使用 Gherkin 风格需求描述 (Requirement: ... / Scenario: ... / WHEN ... AND ... THEN ...)
     - 所有需求必须可追溯到某个 capability
     - 所有描述使用中文
@@ -122,61 +43,10 @@ rules:
     - 如涉及后端变更，必须包含 API contract 章节
     - 所有描述使用中文
 
-  # -------------------------------------------------------------------------
-  # Code Artifacts
-  # -------------------------------------------------------------------------
-  react-component:
-    - 使用 React.FC 类型定义组件 props
-    - Props interface 置于组件上方
-    - 纯展示组件使用 React.memo
-    - 昂贵操作使用 useCallback/useMemo
-    - Props interface 必须显式定义（禁止隐式 any）
-    - 文件必须 default export 组件
-
-  zustand-store:
-    - 显式定义 State interface
-    - 所有 action 必须使用 immer set()
-    - 每个 action 方法包含 JSDoc 注释
-    - 导出为 useXxxStore 模式（React Hook）
-
-  nestjs-controller:
-    - 使用 @Controller 装饰器定义路由前缀
-    - 使用构造函数注入 services
-    - 返回正确的 HttpStatus 状态码
-    - 所有端点必须添加 ApiResponse 装饰器用于 Swagger 文档
-
-  nestjs-service:
-    - 使用 @Injectable 装饰器
-    - 所有操作使用 Logger 记录
-    - 所有数据库操作必须 async/await
-    - 业务错误抛出 HttpException
-
-  # -------------------------------------------------------------------------
-  # Testing Artifacts
-  # -------------------------------------------------------------------------
-  unit-test:
-    - 使用 Vitest 进行前端测试
-    - 测试文件必须与源文件共置: Component.tsx → Component.test.tsx
-    - Store 测试: componentStore.test.ts
-    - 工具函数测试: snapping.test.ts
-    - 禁止 Mock 不在替换范围内的依赖
-    - 禁止在测试中直接修改状态，必须通过 Store 暴露的方法
-
-  e2e-test:
-    - 使用 Cypress 进行前端 E2E 测试
-    - 测试文件位置: cypress/e2e/*.cy.ts
-    - 遵循 arrange-act-assert 模式
-
-  # -------------------------------------------------------------------------
-  # Documentation
-  # -------------------------------------------------------------------------
-  api-doc:
-    - 所有端点必须文档化
-    - 包含请求/响应 JSON 示例
-    - 包含错误响应示例
-    - 接口变更时同步更新
-
-  readme:
-    - 保持安装步骤最新
-    - 包含常用命令章节
-    - 包含架构图（ASCII）
+  tasks:
+    - 任务拆分为带 [ ] 复选框的可执行项
+    - 已完成项标记为[x]
+    - 每个任务必须可独立测试
+    - 包含验证步骤 (npm run lint, npm run test 等)
+    - 相关子任务按编号分组
+    - 所有描述使用中文
