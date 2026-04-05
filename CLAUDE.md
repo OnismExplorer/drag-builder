@@ -176,7 +176,7 @@ drag-builder/
    
 ### 4.2 开发风格细则
 
-- **禁止 Any**：严禁使用 `any`，必须定义精确的 interface 或 type。
+- **限制 Any**：严格限制使用 `any`，优先使用定义精确的 interface 或 type。对于不确定类型，应使用 unknown 处理。若因第三方库等原因确需使用 any，必须在同级加上 // eslint-disable-next-line @typescript-eslint/no-explicit-any 并写明合理原因。
 - **异步处理**：所有数据库操作必须 await，禁止出现未处理的浮动 Promise（见后端 ESLint 规则）。
 - **同步更新**：若因业务需要修改了 `.prettierrc` 或 ESLint 配置，必须同步更新本文件说明（若有变动）。
 
@@ -244,6 +244,7 @@ export default ComponentNode;
 8. 工具 (`../utils/...`)
 9. API (`../api/...`)
 10. 相对路径组件
+11. 仅导入类型时，必须严格使用 import type { xxx } from '...'，以便于构建工具进行 Tree-shaking 优化
 
 ### 4.5 Zustand Store 模式
 
@@ -357,6 +358,7 @@ export class ProjectService {
 2. `typeorm` 相关的 imports
 3. 其他第三方库
 4. 本地模块 imports (`./modules/...`, `./config/...`, `./common/...`)
+5. 仅导入类型时，必须严格使用 import type { xxx } from '...'，以便于构建工具进行 Tree-shaking 优化
 
 ### 4.7 JSDoc 注释规范
 
@@ -476,7 +478,7 @@ state.components.push(newComponent);
 
 ### 6.2 数据变更警告
 
-> **⚠️ JSONB 存储警告：** `canvas_config` 和 `components_tree` 作为 JSONB 存储在 PostgreSQL 中。
+> **⚠️ JSONB 存储警告：** `canvas_config` 和 `components_tree` 作为 JSONB 存储在 PostgreSQL 中。更新 JSONB 字段（如 canvas_config）时，在 TypeORM 中应当做 Merge 操作，严禁直接全量覆盖导致丢失其他属性。
 > 严禁随意修改 `ComponentNode` 的核心字段名（如 `id`、`type`、`position`、`styles`、`content`）。
 > 如需扩展字段，必须保证向后兼容性（Backward Compatibility），避免破坏已有项目数据的解析。
 
@@ -504,17 +506,11 @@ state.components.push(newComponent);
 
 ### 7.2 分支策略
 
-- `main` — 主分支（生产就绪）
-- `master` — 当前开发分支
+- `master` — 主分支（生产就绪，始终保持稳定可用）
+- `develop` — 当前主开发分支
+- `feature/` — 功能变更分支（开发新功能）。每次进行需求开发时，从 develop 分支拉取新分支，并采用语义化命名（例如：feature/login-module 或 feature/JIRA-123）。功能开发完成并确定后，及时 merge 回 develop 分支，并删除该分支
+- `hotfix/` — 紧急修复分支（处理线上 Bug）。当生产环境出现紧急问题时，从 master 分支拉取新分支，并简述修复内容（例如：hotfix/payment-bug）。修复完成并测试通过后，必须同时 merge 回 master 和 develop 分支，并删除该分支
 - 功能开发应在 `openspec/` 目录下创建变更记录
-
-### 7.3 Spec 目录（`.kiro/specs/drag-builder/`）
-
-| 文件 | 用途 |
-|------|------|
-| `design.md` | 架构设计文档 |
-| `requirements.md` | 需求文档（Gherkin 风格验收标准） |
-| `tasks.md` | 实现任务清单 |
 
 ---
 
@@ -564,7 +560,7 @@ state.components.push(newComponent);
 
 ### 8.7 代码输出规范
 
-> **⚠️ 完整代码输出要求：** 在提供修改建议时，除非文件过长，否则**尽量输出完整的函数或组件块**，避免过度使用 `// ... 现有代码 ...` 等省略形式，以确保代码可被准确无误地直接替换（Apply）而不产生语法错误或逻辑缺失。
+> **⚠️ 完整代码输出要求：** 在提供修改建议时，除非文件过长，否则**尽量输出完整的函数或组件块**，避免过度使用 `// ... 现有代码 ...` 等省略形式，以确保代码可被准确无误地直接替换（Apply）而不产生语法错误或逻辑缺失。严禁使用 // ... existing code ... 或 /* 保持不变 */。如果你只修改了某个函数的局部，请完整输出该函数；如果修改了整个组件，请完整输出该组件的代码块。
 
 ### 8.8 文档同步更新规范 (Doc-Code Sync)
 
