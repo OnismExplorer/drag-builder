@@ -1,0 +1,28 @@
+# 环境变量文件
+.env
+
+# 数据库备份文件
+*.dump
+*.sql.gz
+*.backup
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
