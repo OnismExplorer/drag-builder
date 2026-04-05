@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+/* 自定义主题配置 */
+@theme {
+  --color-primary: #c2410c;
+}
+
+/* 自定义全局样式 */
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Logo 渐变动画 - 波浪效果 */
+@keyframes gradient-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}

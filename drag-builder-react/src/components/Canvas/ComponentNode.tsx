@@ -1,0 +1,512 @@
+/**
+ * ComponentNode 组件
+ * 组件节点渲染器，负责渲染画布上的各种组件类型
+ *
+ * 需求：3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4
+ * - 3.4: 从物料库拖拽组件到画布创建新组件
+ * - 3.5: 组件在鼠标释放位置生成
+ * - 3.6: 应用默认样式
+ * - 4.1: 点击组件选中
+ * - 4.2: 显示蓝色选中边框
+ * - 4.3: 显示 8 个调整手柄
+ * - 4.4: 拖拽选中的组件实时更新位置
+ *
+ * 动画支持：使用 ComponentRegistry 和 framer-motion
+ */
+
+import React, { useCallback, useState, useMemo } from 'react';
+import { useDraggable } from '@dnd-kit/core';
+import { motion } from 'framer-motion';
+import ResizeHandles from './ResizeHandles';
+import type { ComponentNode as ComponentNodeType } from '../../types';
+import { useComponentStore } from '../../store/componentStore';
+import { useCanvasStore } from '../../store/canvasStore';
+import { useUIStore } from '../../store/uiStore';
+import { componentRegistry } from '../../store/componentRegistry';
+import { getSafeImageUrl } from '../../utils/sanitization';
+import { generateInlineStyle } from '../built-in/utils';
+
+interface ComponentNodeProps {
+  component: ComponentNodeType;
+  isSelected: boolean;
+}
+
+/**
+ * ComponentNode 组件
+ * 动态渲染不同类型的组件
+ * 使用 React.memo 避免不必要的重渲染（需求：14.2）
+ */
+const ComponentNode: React.FC<ComponentNodeProps> = React.memo(({ component, isSelected }) => {
+  const { selectComponent, selectedIds } = useComponentStore();
+  const { zoom } = useCanvasStore();
+  const { dragOffset: uiDragOffset, draggingComponentId: uiDraggingComponentId } = useUIStore();
+
+  // 标志：是否刚刚完成了调整操作
+  const [justResized, setJustResized] = useState(false);
+
+  // 集成 @dnd-kit 拖拽功能
+  // 只有选中的组件才能被拖拽
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: component.id,
+    data: component,
+    disabled: !isSelected, // 未选中时禁用拖拽
+  });
+
+  // 获取组件定义
+  const definition = useMemo(() => componentRegistry.get(component.type), [component.type]);
+
+  /**
+   * 过滤拖拽监听器，只响应鼠标左键
+   * 防止鼠标中键（用于平移画布）触发组件拖拽
+   */
+  const filteredListeners = React.useMemo(() => {
+    if (!listeners) return {};
+
+    return {
+      ...listeners,
+      onPointerDown: (e: React.PointerEvent) => {
+        // 只有鼠标左键（button === 0）才触发拖拽
+        if (e.button === 0 && listeners.onPointerDown) {
+          listeners.onPointerDown(e);
+        }
+      },
+    };
+  }, [listeners]);
+
+  /**
+   * 处理组件点击（选中/多选）
+   * 需求：4.1
+   * 支持 Ctrl + 点击多选
+   */
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation(); // 阻止事件冒泡到画布
+
+      // 如果刚刚完成了调整操作，忽略这次点击
+      if (justResized) {
+        setJustResized(false);
+        return;
+      }
+
+      // Ctrl/Cmd + 点击：切换多选
+      if (e.ctrlKey || e.metaKey) {
+        const { toggleSelectComponent } = useComponentStore.getState();
+        toggleSelectComponent(component.id);
+      } else {
+        // 普通点击：单选
+        selectComponent(component.id);
+      }
+    },
+    [component.id, selectComponent, justResized]
+  );
+
+  /**
+   * 处理调整结束
+   */
+  const handleResizeEnd = useCallback(() => {
+    // 设置标志，防止立即触发点击事件
+    setJustResized(true);
+    // 100ms 后重置标志
+    setTimeout(() => {
+      setJustResized(false);
+    }, 100);
+  }, []);
+
+  /**
+   * 生成 Tailwind 类名
+   */
+  const getClassName = (): string => {
+    const classes: string[] = [];
+
+    // 基础类名
+    if (component.type === 'button') {
+      classes.push('cursor-pointer', 'transition-colors');
+    }
+
+    // 根据圆角值生成 Tailwind 类名
+    if (component.styles.borderRadius) {
+      const radius = component.styles.borderRadius;
+      if (radius <= 4) classes.push('rounded');
+      else if (radius <= 8) classes.push('rounded-lg');
+      else if (radius <= 16) classes.push('rounded-2xl');
+      else classes.push('rounded-3xl');
+    }
+
+    return classes.join(' ');
+  };
+
+  /**
+   * 根据类型渲染不同元素
+   * 需求：3.6
+   *
+   * 优先使用 Registry 中的 render 函数，fallback 到内置渲染
+   */
+  const renderContent = () => {
+    // 如果 Registry 中有定义，使用 Registry 的 render 函数
+    if (definition?.render) {
+      return definition.render({
+        component,
+        isSelected,
+        onClick: handleClick,
+        onResizeEnd: handleResizeEnd,
+      });
+    }
+
+    // Fallback: 使用内置渲染
+    const className = getClassName();
+    const style = generateInlineStyle(component);
+
+    switch (component.type) {
+      case 'div':
+        return (
+          <div
+            className={className}
+            style={{ ...style, width: '100%', height: '100%' }}
+            onClick={handleClick}
+          />
+        );
+
+      case 'button':
+        return (
+          <button
+            className={className}
+            style={{ ...style, width: '100%', height: '100%' }}
+            onClick={handleClick}
+          >
+            {component.content.text || 'Button'}
+          </button>
+        );
+
+      case 'text':
+        return (
+          <p
+            className={className}
+            style={{ ...style, width: '100%', height: '100%', margin: 0 }}
+            onClick={handleClick}
+          >
+            {component.content.text || 'Text'}
+          </p>
+        );
+
+      case 'image':
+        return (
+          <img
+            src={getSafeImageUrl(component.content.src)}
+            alt={component.content.alt || 'Image'}
+            className={className}
+            style={{ ...style, width: '100%', height: '100%', objectFit: 'cover' }}
+            onClick={handleClick}
+          />
+        );
+
+      case 'input':
+        return (
+          <input
+            type="text"
+            placeholder={component.content.placeholder || 'Input'}
+            className={className}
+            style={{ ...style, width: '100%', height: '100%' }}
+            onClick={handleClick}
+          />
+        );
+
+      case 'radio':
+        return (
+          <div
+            className={className}
+            style={{
+              ...style,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              overflow: 'auto',
+            }}
+            onClick={handleClick}
+          >
+            {component.content.options?.map(option => (
+              <label
+                key={option.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: option.disabled ? 'not-allowed' : 'pointer',
+                  userSelect: 'none',
+                  opacity: option.disabled ? 0.5 : 1,
+                }}
+                onClick={e => {
+                  e.stopPropagation();
+                  if (option.disabled) return;
+                  const updatedOptions = component.content.options?.map(opt => ({
+                    ...opt,
+                    checked: opt.id === option.id,
+                  }));
+                  useComponentStore.getState().updateComponent(component.id, {
+                    content: {
+                      ...component.content,
+                      options: updatedOptions,
+                    },
+                  });
+                }}
+              >
+                <div
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    border: '2px solid currentColor',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {option.checked && (
+                    <div
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: 'currentColor',
+                      }}
+                    />
+                  )}
+                </div>
+                <span style={{ fontSize: 'inherit' }}>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'checkbox':
+        return (
+          <div
+            className={className}
+            style={{
+              ...style,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              overflow: 'auto',
+            }}
+            onClick={handleClick}
+          >
+            {component.content.options?.map(option => (
+              <label
+                key={option.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: option.disabled ? 'not-allowed' : 'pointer',
+                  userSelect: 'none',
+                  opacity: option.disabled ? 0.5 : 1,
+                }}
+                onClick={e => {
+                  e.stopPropagation();
+                  if (option.disabled) return;
+                  const updatedOptions = component.content.options?.map(opt =>
+                    opt.id === option.id ? { ...opt, checked: !opt.checked } : opt
+                  );
+                  useComponentStore.getState().updateComponent(component.id, {
+                    content: {
+                      ...component.content,
+                      options: updatedOptions,
+                    },
+                  });
+                }}
+              >
+                <div
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                    border: '2px solid currentColor',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    backgroundColor: option.checked ? 'currentColor' : 'transparent',
+                  }}
+                >
+                  {option.checked && (
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      style={{ color: (style.backgroundColor as string) || '#FFFFFF' }}
+                    >
+                      <path
+                        d="M2 6L5 9L10 3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span style={{ fontSize: 'inherit' }}>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'tag':
+        return (
+          <div
+            className={className}
+            style={{
+              ...style,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={handleClick}
+          >
+            {component.content.text || '标签'}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  /**
+   * 组件容器样式（位置和尺寸）
+   * 应用拖拽变换（考虑画布缩放）
+   * 支持多选组件同步移动动画
+   */
+  // 判断当前组件是否正在被拖拽
+  // 1. 自己正在被拖拽（isDragging）
+  // 2. 或者是多选中的其他组件，且正在拖拽的组件也在选中列表中
+  const isDraggingSelected = uiDraggingComponentId && selectedIds.includes(uiDraggingComponentId);
+  const isBeingDragged =
+    isDragging ||
+    (uiDragOffset &&
+      isDraggingSelected &&
+      uiDraggingComponentId !== component.id &&
+      selectedIds.includes(component.id));
+
+  const containerStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: `${component.position.x}px`,
+    top: `${component.position.y}px`,
+    width: `${component.position.width}px`,
+    height: `${component.position.height}px`,
+    zIndex: component.position.zIndex,
+    // 拖拽时的偏移量需要除以 zoom，因为画布已经被缩放了
+    // 如果是被拖拽的组件，使用 useDraggable 的 transform
+    // 如果是多选中的其他组件，使用共享的 dragOffset（但只有当拖拽的组件也在选中列表中时）
+    transform: transform
+      ? `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)`
+      : uiDragOffset &&
+          isDraggingSelected &&
+          uiDraggingComponentId !== component.id &&
+          selectedIds.includes(component.id)
+        ? `translate3d(${uiDragOffset.x / zoom}px, ${uiDragOffset.y / zoom}px, 0)`
+        : undefined,
+    // 所有正在被拖拽的组件都显示半透明
+    opacity: isBeingDragged ? 0.5 : 1,
+    // 只有选中的组件显示移动光标
+    cursor: isSelected ? 'move' : 'pointer',
+  };
+
+  /**
+   * 选中边框样式
+   * 需求：4.2
+   */
+  const selectionStyle: React.CSSProperties = isSelected
+    ? {
+        outline: '2px solid #3B82F6',
+        outlineOffset: '0px',
+      }
+    : {};
+
+  /**
+   * 动画配置
+   * 如果组件有动画配置，使用 framer-motion animate
+   */
+  const hasAnimation = component.animation && definition?.render;
+  const animationProps = hasAnimation
+    ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        initial: component.animation?.initial as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        animate: component.animation?.animate as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        transition: component.animation?.transition as any,
+      }
+    : undefined;
+
+  // 动画是否刚刚播放完毕（用于清除 framer-motion 样式残留）
+  const [animationJustCompleted, setAnimationJustCompleted] = useState(false);
+
+  /**
+   * 动画播放完毕后的回调
+   * 清除 framer-motion 添加的内联样式，让组件恢复正常状态
+   * 但不清除 animation 本身，保持"启用动画"状态
+   */
+  const handleAnimationComplete = useCallback(() => {
+    setAnimationJustCompleted(true);
+    // 200ms 后重置标志，让组件可以响应下一次动画
+    setTimeout(() => setAnimationJustCompleted(false), 200);
+  }, []);
+
+  // 用于清除 framer-motion 样式残留的 style
+  // 动画播放完毕后，framer-motion 的 transform/opacity 等样式会残留在 DOM 上
+  // 需要显式清除才能让组件恢复正常状态
+  const resetStyle: React.CSSProperties = animationJustCompleted
+    ? { transform: '', opacity: '' }
+    : {};
+
+  // 包装容器，处理动画
+  // 根据是否有动画选择 motion.div 或普通 div
+  if (hasAnimation) {
+    return (
+      <motion.div
+        ref={setNodeRef}
+        className="component-node"
+        style={{ ...containerStyle, ...selectionStyle, ...resetStyle }}
+        onClick={handleClick}
+        {...filteredListeners}
+        {...attributes}
+        initial={animationProps?.initial}
+        animate={animationProps?.animate}
+        transition={animationProps?.transition}
+        onAnimationComplete={handleAnimationComplete}
+      >
+        {renderContent()}
+
+        {/* 调整手柄（8 个：四角 + 四边中点）- 需求：4.3, 5.1-5.6 */}
+        {isSelected && <ResizeHandles component={component} onResizeEnd={handleResizeEnd} />}
+      </motion.div>
+    );
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="component-node"
+      style={{ ...containerStyle, ...selectionStyle, ...resetStyle }}
+      onClick={handleClick}
+      {...filteredListeners}
+      {...attributes}
+    >
+      {renderContent()}
+
+      {/* 调整手柄（8 个：四角 + 四边中点）- 需求：4.3, 5.1-5.6 */}
+      {isSelected && <ResizeHandles component={component} onResizeEnd={handleResizeEnd} />}
+    </div>
+  );
+});
+
+export default ComponentNode;
