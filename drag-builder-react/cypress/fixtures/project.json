@@ -1,0 +1,84 @@
+{
+  "测试项目数据": "用于 E2E 测试的模拟项目数据",
+  "单个项目": {
+    "id": "test-project-001",
+    "name": "测试项目",
+    "canvasConfig": {
+      "width": 1440,
+      "height": 900,
+      "preset": "desktop",
+      "backgroundColor": "#FFFFFF"
+    },
+    "componentsTree": [
+      {
+        "id": "comp-001",
+        "type": "button",
+        "props": {
+          "text": "测试按钮",
+          "variant": "primary"
+        },
+        "position": {
+          "x": 100,
+          "y": 100,
+          "width": 120,
+          "height": 40,
+          "zIndex": 1
+        },
+        "style": {
+          "backgroundColor": "#ea580c",
+          "color": "#ffffff",
+          "borderRadius": "8px"
+        },
+        "children": []
+      }
+    ],
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  "项目列表": {
+    "data": [
+      {
+        "id": "test-project-001",
+        "name": "测试项目一",
+        "canvasConfig": {
+          "width": 1440,
+          "height": 900,
+          "preset": "desktop",
+          "backgroundColor": "#FFFFFF"
+        },
+        "componentsTree": [],
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-01-01T00:00:00.000Z"
+      },
+      {
+        "id": "test-project-002",
+        "name": "测试项目二",
+        "canvasConfig": {
+          "width": 375,
+          "height": 667,
+          "preset": "mobile",
+          "backgroundColor": "#FFFFFF"
+        },
+        "componentsTree": [],
+        "createdAt": "2024-01-02T00:00:00.000Z",
+        "updatedAt": "2024-01-02T00:00:00.000Z"
+      }
+    ],
+    "total": 2,
+    "page": 1,
+    "limit": 50
+  },
+  "创建项目响应": {
+    "id": "new-project-001",
+    "name": "未命名项目",
+    "canvasConfig": {
+      "width": 1440,
+      "height": 900,
+      "preset": "desktop",
+      "backgroundColor": "#FFFFFF"
+    },
+    "componentsTree": [],
+    "createdAt": "2024-01-03T00:00:00.000Z",
+    "updatedAt": "2024-01-03T00:00:00.000Z"
+  }
+}

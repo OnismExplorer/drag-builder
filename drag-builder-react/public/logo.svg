@@ -1,0 +1,25 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="layerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f1f5f9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 圆角矩形背景 -->
+  <rect width="32" height="32" rx="6" fill="url(#bgGradient)"/>
+  
+  <!-- 图层图标 - 三层堆叠效果 -->
+  <!-- 底层 -->
+  <path d="M16 10L9 13.5L16 17L23 13.5L16 10Z" fill="url(#layerGradient)" opacity="0.4"/>
+  <!-- 中层 -->
+  <path d="M16 14L9 17.5L16 21L23 17.5L16 14Z" fill="url(#layerGradient)" opacity="0.7"/>
+  <!-- 顶层 -->
+  <path d="M16 18L9 21.5L16 25L23 21.5L16 18Z" fill="url(#layerGradient)"/>
+</svg>
