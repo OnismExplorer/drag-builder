@@ -485,6 +485,8 @@ state.components.push(newComponent);
 
 ## 7. Git 工作流
 
+> **⚠️ 变更规范：** 每次已经经过确定的代码/文件/目录的变更，必须及时提交一次规范的 `git commit`，并说明是什么变更。
+
 ### 7.1 提交规范
 
 ```
