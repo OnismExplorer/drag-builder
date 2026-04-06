@@ -14,17 +14,14 @@
  * 动画支持：使用 ComponentRegistry 和 framer-motion
  */
 
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import ResizeHandles from './ResizeHandles';
 import type { ComponentNode as ComponentNodeType } from '../../types';
-import { useComponentStore } from '../../store/componentStore';
-import { useCanvasStore } from '../../store/canvasStore';
+import { useCanvasStore, useComponentStore } from '../../store';
 import { useUIStore } from '../../store/uiStore';
 import { componentRegistry } from '../../store/componentRegistry';
-import { getSafeImageUrl } from '../../utils/sanitization';
-import { generateInlineStyle } from '../built-in/utils';
 import { useAnimationPreview } from '../../hooks/useAnimationPreview';
 
 interface ComponentNodeProps {
@@ -114,29 +111,6 @@ const ComponentNode: React.FC<ComponentNodeProps> = React.memo(({ component, isS
   }, []);
 
   /**
-   * 生成 Tailwind 类名
-   */
-  const getClassName = (): string => {
-    const classes: string[] = [];
-
-    // 基础类名
-    if (component.type === 'button') {
-      classes.push('cursor-pointer', 'transition-colors');
-    }
-
-    // 根据圆角值生成 Tailwind 类名
-    if (component.styles.borderRadius) {
-      const radius = component.styles.borderRadius;
-      if (radius <= 4) classes.push('rounded');
-      else if (radius <= 8) classes.push('rounded-lg');
-      else if (radius <= 16) classes.push('rounded-2xl');
-      else classes.push('rounded-3xl');
-    }
-
-    return classes.join(' ');
-  };
-
-  /**
    * 根据类型渲染不同元素
    * 需求：3.6
    *
@@ -153,232 +127,9 @@ const ComponentNode: React.FC<ComponentNodeProps> = React.memo(({ component, isS
       });
     }
 
-    // Fallback: 使用内置渲染
-    const className = getClassName();
-    const style = generateInlineStyle(component);
-
-    switch (component.type) {
-      case 'div':
-        return (
-          <div
-            className={className}
-            style={{ ...style, width: '100%', height: '100%' }}
-            onClick={handleClick}
-          />
-        );
-
-      case 'button':
-        return (
-          <button
-            className={className}
-            style={{ ...style, width: '100%', height: '100%' }}
-            onClick={handleClick}
-          >
-            {component.content.text || 'Button'}
-          </button>
-        );
-
-      case 'text':
-        return (
-          <p
-            className={className}
-            style={{ ...style, width: '100%', height: '100%', margin: 0 }}
-            onClick={handleClick}
-          >
-            {component.content.text || 'Text'}
-          </p>
-        );
-
-      case 'image':
-        return (
-          <img
-            src={getSafeImageUrl(component.content.src)}
-            alt={component.content.alt || 'Image'}
-            className={className}
-            style={{ ...style, width: '100%', height: '100%', objectFit: 'cover' }}
-            onClick={handleClick}
-          />
-        );
-
-      case 'input':
-        return (
-          <input
-            type="text"
-            placeholder={component.content.placeholder || 'Input'}
-            className={className}
-            style={{ ...style, width: '100%', height: '100%' }}
-            onClick={handleClick}
-          />
-        );
-
-      case 'radio':
-        return (
-          <div
-            className={className}
-            style={{
-              ...style,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              overflow: 'auto',
-            }}
-            onClick={handleClick}
-          >
-            {component.content.options?.map(option => (
-              <label
-                key={option.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: option.disabled ? 'not-allowed' : 'pointer',
-                  userSelect: 'none',
-                  opacity: option.disabled ? 0.5 : 1,
-                }}
-                onClick={e => {
-                  e.stopPropagation();
-                  if (option.disabled) return;
-                  const updatedOptions = component.content.options?.map(opt => ({
-                    ...opt,
-                    checked: opt.id === option.id,
-                  }));
-                  useComponentStore.getState().updateComponent(component.id, {
-                    content: {
-                      ...component.content,
-                      options: updatedOptions,
-                    },
-                  });
-                }}
-              >
-                <div
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    border: '2px solid currentColor',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {option.checked && (
-                    <div
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: 'currentColor',
-                      }}
-                    />
-                  )}
-                </div>
-                <span style={{ fontSize: 'inherit' }}>{option.label}</span>
-              </label>
-            ))}
-          </div>
-        );
-
-      case 'checkbox':
-        return (
-          <div
-            className={className}
-            style={{
-              ...style,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              overflow: 'auto',
-            }}
-            onClick={handleClick}
-          >
-            {component.content.options?.map(option => (
-              <label
-                key={option.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: option.disabled ? 'not-allowed' : 'pointer',
-                  userSelect: 'none',
-                  opacity: option.disabled ? 0.5 : 1,
-                }}
-                onClick={e => {
-                  e.stopPropagation();
-                  if (option.disabled) return;
-                  const updatedOptions = component.content.options?.map(opt =>
-                    opt.id === option.id ? { ...opt, checked: !opt.checked } : opt
-                  );
-                  useComponentStore.getState().updateComponent(component.id, {
-                    content: {
-                      ...component.content,
-                      options: updatedOptions,
-                    },
-                  });
-                }}
-              >
-                <div
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '4px',
-                    border: '2px solid currentColor',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    backgroundColor: option.checked ? 'currentColor' : 'transparent',
-                  }}
-                >
-                  {option.checked && (
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 12 12"
-                      fill="none"
-                      style={{ color: (style.backgroundColor as string) || '#FFFFFF' }}
-                    >
-                      <path
-                        d="M2 6L5 9L10 3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </div>
-                <span style={{ fontSize: 'inherit' }}>{option.label}</span>
-              </label>
-            ))}
-          </div>
-        );
-
-      case 'tag':
-        return (
-          <div
-            className={className}
-            style={{
-              ...style,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onClick={handleClick}
-          >
-            {component.content.text || '标签'}
-          </div>
-        );
-
-      default:
-        return null;
-    }
+    // Fallback: 使用内置渲染（实际上所有内置组件都已注册到 registry，不会走到这里）
+    // 这里保留是为了防止万一有未注册的组件类型
+    return null;
   };
 
   /**
@@ -436,7 +187,7 @@ const ComponentNode: React.FC<ComponentNodeProps> = React.memo(({ component, isS
    * 动画配置
    * 只有在预览模式时，才传入 framer-motion 的核心动画属性
    */
-  const { isPreviewing, stopPreview } = useAnimationPreview(component, component.animation);
+  const { isPreviewing, stopPreview } = useAnimationPreview(component.animation);
 
   // 用于强制重置动画的 key
   // 预览时 key 包含动画配置，确保每次点击都重播
