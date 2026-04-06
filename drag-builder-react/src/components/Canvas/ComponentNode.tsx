@@ -25,6 +25,7 @@ import { useUIStore } from '../../store/uiStore';
 import { componentRegistry } from '../../store/componentRegistry';
 import { getSafeImageUrl } from '../../utils/sanitization';
 import { generateInlineStyle } from '../built-in/utils';
+import { useAnimationPreview } from '../../hooks/useAnimationPreview';
 
 interface ComponentNodeProps {
   component: ComponentNodeType;
@@ -433,55 +434,68 @@ const ComponentNode: React.FC<ComponentNodeProps> = React.memo(({ component, isS
 
   /**
    * 动画配置
-   * 如果组件有动画配置，使用 framer-motion animate
+   * 只有在预览模式时，才传入 framer-motion 的核心动画属性
    */
-  const hasAnimation = component.animation && definition?.render;
-  const animationProps = hasAnimation
-    ? {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        initial: component.animation?.initial as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        animate: component.animation?.animate as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        transition: component.animation?.transition as any,
-      }
-    : undefined;
+  const { isPreviewing, stopPreview } = useAnimationPreview(component, component.animation);
+
+  // 用于强制重置动画的 key
+  // 预览时 key 包含动画配置，确保每次点击都重播
+  // 非预览时 key 恢复为 component.id，组件回归自然状态
+  const animationKey = isPreviewing
+    ? `preview-${component.id}-${JSON.stringify(component.animation)}`
+    : component.id;
+
+  // 只有在预览时，才传入 animationProps
+  const animationProps =
+    isPreviewing && component.animation
+      ? {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          initial: component.animation.initial as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          animate: component.animation.animate as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          transition: component.animation.transition as any,
+        }
+      : undefined;
 
   // 动画是否刚刚播放完毕（用于清除 framer-motion 样式残留）
   const [animationJustCompleted, setAnimationJustCompleted] = useState(false);
 
   /**
    * 动画播放完毕后的回调
-   * 清除 framer-motion 添加的内联样式，让组件恢复正常状态
-   * 但不清除 animation 本身，保持"启用动画"状态
+   * 停止预览并复原（对于退出/移动/变化类动画会清除 animation 配置）
    */
   const handleAnimationComplete = useCallback(() => {
     setAnimationJustCompleted(true);
-    // 200ms 后重置标志，让组件可以响应下一次动画
+    // 200ms 后重置标志
     setTimeout(() => setAnimationJustCompleted(false), 200);
-  }, []);
+
+    // 停止预览
+    if (isPreviewing) {
+      stopPreview();
+    }
+  }, [isPreviewing, stopPreview]);
 
   // 用于清除 framer-motion 样式残留的 style
-  // 动画播放完毕后，framer-motion 的 transform/opacity 等样式会残留在 DOM 上
-  // 需要显式清除才能让组件恢复正常状态
   const resetStyle: React.CSSProperties = animationJustCompleted
     ? { transform: '', opacity: '' }
     : {};
 
+  // hasAnimation 只用于判断是否显示 motion.div 包装
+  const hasAnimation = component.animation && definition?.render;
+
   // 包装容器，处理动画
-  // 根据是否有动画选择 motion.div 或普通 div
   if (hasAnimation) {
     return (
       <motion.div
+        key={animationKey}
         ref={setNodeRef}
         className="component-node"
         style={{ ...containerStyle, ...selectionStyle, ...resetStyle }}
         onClick={handleClick}
         {...filteredListeners}
         {...attributes}
-        initial={animationProps?.initial}
-        animate={animationProps?.animate}
-        transition={animationProps?.transition}
+        {...animationProps}
         onAnimationComplete={handleAnimationComplete}
       >
         {renderContent()}

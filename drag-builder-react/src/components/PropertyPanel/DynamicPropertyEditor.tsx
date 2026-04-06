@@ -273,7 +273,7 @@ const ANIMATION_PRESETS: AnimationPreset[] = [
     label: '旋转',
     icon: '🌀',
     description: '旋转出现',
-    defaultValue: 0,
+    defaultValue: 90,
     unit: '°',
     min: -360,
     max: 360,
