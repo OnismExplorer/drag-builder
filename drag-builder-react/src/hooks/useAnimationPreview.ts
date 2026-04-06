@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AnimationConfig, ComponentNode } from '../types';
+import type { AnimationConfig } from '../types';
 
 /**
  * 动画预览 Hook
@@ -10,14 +10,13 @@ import type { AnimationConfig, ComponentNode } from '../types';
  * - 动画播放完毕后，组件回归自然状态（通过 key 变化重新挂载实现）
  * - animation 配置保留在 store 中，不影响属性面板和导出
  *
- * @param component 当前组件
  * @param animation 动画配置
  * @returns { isPreviewing, stopPreview }
  */
-export function useAnimationPreview(
-  component: ComponentNode,
-  animation: AnimationConfig | undefined
-): { isPreviewing: boolean; stopPreview: () => void } {
+export function useAnimationPreview(animation: AnimationConfig | undefined): {
+  isPreviewing: boolean;
+  stopPreview: () => void;
+} {
   // 用于标记是否正在预览中
   const [isPreviewing, setIsPreviewing] = useState(false);
 

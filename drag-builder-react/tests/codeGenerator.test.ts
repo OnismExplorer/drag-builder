@@ -3,9 +3,9 @@
  * 测试 CodeGenerator 类的各种功能
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { CodeGenerator } from '../src/utils/codeGenerator';
-import type { ComponentNode, CanvasConfig } from '../src/types';
+import type { CanvasConfig, ComponentNode } from '../src/types';
 
 describe('CodeGenerator', () => {
   const generator = new CodeGenerator();
@@ -20,14 +20,14 @@ describe('CodeGenerator', () => {
   describe('generateTSXCode', () => {
     it('应该为空画布生成空组件模板', () => {
       const code = generator.generateTSXCode([], mockCanvasConfig);
-      
+
       expect(code).toContain('import React from');
       expect(code).toContain('const GeneratedPage: React.FC');
       expect(code).toContain('export default GeneratedPage');
       expect(code).toContain('画布为空');
-      expect(code).toContain('width: \'800px\'');
-      expect(code).toContain('height: \'600px\'');
-      expect(code).toContain('backgroundColor: \'#FFFFFF\'');
+      expect(code).toContain("width: '800px'");
+      expect(code).toContain("height: '600px'");
+      expect(code).toContain("backgroundColor: '#FFFFFF'");
     });
 
     it('应该为单个 div 组件生成正确的代码', () => {
@@ -47,7 +47,7 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       expect(code).toContain('<div');
       expect(code).toContain('"position": "absolute"');
       expect(code).toContain('"left": "100px"');
@@ -78,7 +78,7 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       expect(code).toContain('<button');
       expect(code).toContain('点击我');
       expect(code).toContain('"backgroundColor": "#C2410C"');
@@ -105,7 +105,7 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       expect(code).toContain('<p');
       expect(code).toContain('这是一段文本');
       expect(code).toContain('"color": "#0F172A"');
@@ -128,7 +128,7 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       expect(code).toContain('<img');
       expect(code).toContain('src="https://example.com/image.jpg"');
       expect(code).toContain('alt="示例图片"');
@@ -152,7 +152,7 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       expect(code).toContain('<input');
       expect(code).toContain('placeholder="请输入内容"');
     });
@@ -215,7 +215,7 @@ describe('CodeGenerator', () => {
         ];
 
         const code = generator.generateTSXCode(components, mockCanvasConfig);
-        
+
         if (expected) {
           expect(code).toContain(expected);
         }
@@ -241,7 +241,7 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       expect(code).toContain('boxShadow');
       expect(code).toContain('2px 4px 8px rgba(0, 0, 0, 0.1)');
     });
@@ -258,13 +258,13 @@ describe('CodeGenerator', () => {
       ];
 
       const code = generator.generateTSXCode(components, mockCanvasConfig);
-      
+
       // 检查基本结构
-      expect(code).toContain('import React from \'react\';');
+      expect(code).toContain("import React from 'react';");
       expect(code).toContain('const GeneratedPage: React.FC = () => {');
       expect(code).toContain('return (');
       expect(code).toContain('export default GeneratedPage;');
-      
+
       // 检查没有语法错误的迹象
       expect(code).not.toContain('undefined');
       expect(code).not.toContain('[object Object]');
@@ -803,7 +803,11 @@ describe('CodeGenerator', () => {
           animation: {
             initial: { opacity: 0 },
             animate: { opacity: 1 },
-            transition: { duration: 0.5 },
+            transition: {
+              duration: 0.5,
+              delay: 0,
+              ease: '',
+            },
           },
         },
       ];
@@ -868,7 +872,11 @@ describe('CodeGenerator', () => {
           animation: {
             initial: { opacity: 0 },
             animate: { opacity: 1 },
-            transition: { duration: 0.3 },
+            transition: {
+              duration: 0.3,
+              delay: 0,
+              ease: '',
+            },
           },
         },
       ];
@@ -889,12 +897,18 @@ describe('CodeGenerator', () => {
           animation: {
             initial: { opacity: 0 },
             animate: { opacity: 1 },
-            transition: { duration: 0.3 },
+            transition: {
+              duration: 0.3,
+              delay: 0,
+              ease: '',
+            },
           },
         },
       ];
 
-      const result = generator.generateCode(components, mockCanvasConfig, { includeAnimation: false });
+      const result = generator.generateCode(components, mockCanvasConfig, {
+        includeAnimation: false,
+      });
 
       expect(result.tsx).not.toContain('motion.div');
       expect(result.tsx).not.toContain('initial');
