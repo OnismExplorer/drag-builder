@@ -8,7 +8,7 @@
  * 3. 为 MaterialPanel、PropertyPanel、CodeGenerator 提供统一的数据源
  */
 
-import type { ComponentNode, ComponentType } from '../types';
+import type { ComponentNode, ComponentType } from '@/types';
 
 // ============================================================
 // 类型定义
@@ -57,7 +57,8 @@ export interface PropertyGroup {
 export interface MaterialConfig {
   type: string; // 组件类型 (唯一标识)
   label: string; // 显示名称
-  icon: string; // 图标 (Lucide 图标名)
+  icon: string; // 图标名 (Lucide 图标名 或 antd 图标名如 'antd:Button')
+  iconSource?: 'lucide' | 'antd'; // 图标来源，默认 lucide
   description?: string; // 描述文字
   backgroundColor?: string; // 预览背景色
   starColor?: string; // 星光边框色
@@ -95,6 +96,9 @@ export interface ComponentDefinition {
   // 唯一标识
   type: string;
 
+  // 命名空间 (用于区分组件库: 'built-in', 'antd', 'mui' 等)
+  namespace?: string;
+
   // 物料面板配置
   material: MaterialConfig;
 
@@ -119,8 +123,10 @@ export interface ComponentDefinition {
 
   // 代码生成配置
   codeGen: {
-    // 生成 JSX 模板的函数
-    generateJSX: (component: ComponentNode, style: string, className: string) => string;
+    // 生成的代码需要的 import 语句
+    imports?: string[];
+    // 生成 JSX 模板的函数（codeGenerator 传入预计算的 style/className）
+    generateJSX: (component: ComponentNode, style?: string, className?: string) => string;
     // 生成 CSS 的函数 (可选, CSS 模式时使用)
     generateCSS?: (component: ComponentNode) => string;
   };
@@ -293,6 +299,7 @@ class ComponentRegistry {
       styles: { ...def.defaults.styles },
       content: { ...def.defaults.content },
       animation: def.defaults.animation ? { ...def.defaults.animation } : undefined,
+      props: def.defaults.props ? { ...def.defaults.props } : undefined,
     };
   }
 }

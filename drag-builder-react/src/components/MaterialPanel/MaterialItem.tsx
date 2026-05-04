@@ -8,12 +8,14 @@
  * - 使用绝对定位避免挤压其他组件
  * - 文字从下往上滚动淡入效果
  * - 触发浮层预览
+ * - 支持 lucide 和 @ant-design/icons 两种图标源
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { motion, AnimatePresence } from 'framer-motion';
-import type { MaterialConfig } from '../../store/componentRegistry';
+import { AnimatePresence, motion } from 'framer-motion';
+import type { MaterialConfig } from '@store/componentRegistry';
+import { getAntdIconSync, isAntdIcon } from '@components/adapters/antd/shared/iconMap';
 import GlareHover from './GlareHover';
 
 interface MaterialItemProps {
@@ -136,6 +138,21 @@ const getComponentIcon = (type: string) => {
  * MaterialItem 组件
  * 默认显示图标，悬浮时展开显示详细信息
  */
+/**
+ * 获取组件图标（支持 antd 图标和内置 SVG fallback）
+ */
+const getIconNode = (config: MaterialConfig): React.ReactNode => {
+  // 优先使用 antd 图标
+  if (config.iconSource === 'antd' && isAntdIcon(config.icon)) {
+    const IconComponent = getAntdIconSync(config.icon);
+    if (IconComponent) {
+      return <IconComponent style={{ fontSize: 20 }} />;
+    }
+  }
+  // Fallback 到内置 SVG 图标
+  return getComponentIcon(config.type);
+};
+
 export const MaterialItem: React.FC<MaterialItemProps> = ({ config, onHoverChange }) => {
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -163,7 +180,7 @@ export const MaterialItem: React.FC<MaterialItemProps> = ({ config, onHoverChang
       ref={node => {
         setNodeRef(node);
         if (node) {
-          (containerRef as React.MutableRefObject<HTMLDivElement>).current = node;
+          (containerRef as React.RefObject<HTMLDivElement>).current = node;
         }
       }}
       {...listeners}
@@ -177,19 +194,7 @@ export const MaterialItem: React.FC<MaterialItemProps> = ({ config, onHoverChang
         transition: 'opacity 0.2s, transform 0.2s',
       }}
     >
-      <motion.div
-        layout
-        className="relative"
-        initial={false}
-        animate={{
-          width: isHovered ? '100%' : 'auto',
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 30,
-        }}
-      >
+      <div className="relative w-full">
         <GlareHover
           width="100%"
           height="auto"
@@ -207,37 +212,44 @@ export const MaterialItem: React.FC<MaterialItemProps> = ({ config, onHoverChang
               '0 2px 4px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.04)',
           }}
         >
-          <div className="flex items-center gap-3 p-3 w-full overflow-hidden">
-            {/* 组件图标 - 始终显示 */}
+          <div
+            className="grid items-center p-2 w-full overflow-hidden"
+            style={{ gridTemplateColumns: '1fr auto 1fr' }}
+          >
+            {/* 左侧占位 —— 保持三列结构平衡 */}
+            <div className="min-w-0" />
+
+            {/* 组件图标 —— 始终固定在中列，位置不受 hover 影响 */}
             <div
               className="
-                flex items-center justify-center 
-                w-12 h-12 
+                flex items-center justify-center
+                w-12 h-12
                 rounded-lg
                 text-slate-600
-                bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100
                 border border-slate-200/80
-                flex-shrink-0
               "
               style={{
+                backgroundColor: config.backgroundColor || '#f8fafc',
+                backgroundImage:
+                  'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)',
                 boxShadow: `
-                  inset 3px 3px 6px rgba(0, 0, 0, 0.1),
-                  inset -3px -3px 6px rgba(255, 255, 255, 0.9),
-                  inset 0 0 2px rgba(0, 0, 0, 0.05)
+                  inset 3px 3px 6px rgba(0, 0, 0, 0.06),
+                  inset -3px -3px 6px rgba(255, 255, 255, 0.8),
+                  inset 0 0 2px rgba(0, 0, 0, 0.03)
                 `,
               }}
             >
-              {getComponentIcon(config.type)}
+              {getIconNode(config)}
             </div>
 
-            {/* 文字信息 - 悬浮时显示，带动画 */}
+            {/* 文字信息 —— 悬浮时从右侧淡入，不参与布局流变化 */}
             <AnimatePresence>
               {isHovered && (
                 <motion.div
-                  className="flex-1 min-w-0"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
+                  className="min-w-0 overflow-hidden"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
                   transition={{
                     duration: 0.2,
                     ease: 'easeOut',
@@ -250,7 +262,7 @@ export const MaterialItem: React.FC<MaterialItemProps> = ({ config, onHoverChang
             </AnimatePresence>
           </div>
         </GlareHover>
-      </motion.div>
+      </div>
     </div>
   );
 };

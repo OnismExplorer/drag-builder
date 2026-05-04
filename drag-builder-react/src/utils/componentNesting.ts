@@ -3,7 +3,7 @@
  * 基于空间位置判断组件的包含关系
  */
 
-import type { ComponentNode } from '../types';
+import type { ComponentNode } from '@/types';
 
 /**
  * 检查组件 B 是否完全在组件 A 内部

@@ -2,7 +2,7 @@
  * Div 容器组件定义
  */
 
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle, generateCSSProperties, generateClassName } from './utils';
 
 /**
@@ -77,9 +77,10 @@ export const divDefinition: ComponentDefinition = {
     return <div className="w-full h-full" style={style} onClick={onClick} />;
   },
   codeGen: {
-    generateJSX: (component, style) => {
-      const className = generateClassName(component);
-      return `<div className="${className}" style={${style}} />`;
+    imports: [],
+    generateJSX: (component, style, className) => {
+      const cn = className ?? generateClassName(component);
+      return `<div className="${cn}" style={${style}} />`;
     },
     generateCSS: component => {
       return `.comp-${component.id} {

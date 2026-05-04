@@ -18,11 +18,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import ResizeHandles from './ResizeHandles';
-import type { ComponentNode as ComponentNodeType } from '../../types';
-import { useCanvasStore, useComponentStore } from '../../store';
-import { useUIStore } from '../../store/uiStore';
-import { componentRegistry } from '../../store/componentRegistry';
-import { useAnimationPreview } from '../../hooks/useAnimationPreview';
+import type { ComponentNode as ComponentNodeType } from '@/types';
+import { useCanvasStore, useComponentStore } from '@store';
+import { useUIStore } from '@store/uiStore';
+import { componentRegistry } from '@store/componentRegistry';
+import { useAnimationPreview } from '@hooks/useAnimationPreview';
 
 interface ComponentNodeProps {
   component: ComponentNodeType;

@@ -2,7 +2,7 @@
  * Input 输入框组件定义
  */
 
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
 
 /**
@@ -30,7 +30,7 @@ export const inputDefinition: ComponentDefinition = {
       fontSize: 14,
       padding: 8,
     },
-    content: { placeholder: '请输入内容' },
+    content: { placeholder: '' },
   },
   propertyGroups: [
     {
@@ -95,7 +95,7 @@ export const inputDefinition: ComponentDefinition = {
           key: 'content.placeholder',
           label: '占位符',
           type: 'string',
-          defaultValue: '请输入内容',
+          defaultValue: '',
         },
       ],
     },
@@ -110,7 +110,7 @@ export const inputDefinition: ComponentDefinition = {
     return (
       <input
         type="text"
-        placeholder={String(component.content.placeholder || '请输入内容')}
+        placeholder={String(component.content.placeholder || '')}
         className="w-full h-full"
         style={style}
         onClick={onClick}
@@ -118,8 +118,9 @@ export const inputDefinition: ComponentDefinition = {
     );
   },
   codeGen: {
+    imports: [],
     generateJSX: (component, style) => {
-      const placeholder = String(component.content.placeholder || '请输入内容');
+      const placeholder = String(component.content.placeholder || '');
       return `<input type="text" placeholder="${placeholder}" className="w-full h-full" style={${style}} />`;
     },
   },

@@ -7,8 +7,8 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { CanvasConfig } from '../types';
-import { CANVAS_PRESETS } from '../types';
+import type { CanvasConfig } from '@/types';
+import { CANVAS_PRESETS } from '@/types';
 
 /**
  * 画布状态接口

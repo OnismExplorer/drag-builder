@@ -18,15 +18,15 @@ import ComponentNode from './ComponentNode';
 import { SnappingGuides } from './SnappingGuides';
 import DragGrid from './DragGrid';
 import { PositionTooltip } from './PositionTooltip';
-import { useCanvasStore } from '../../store/canvasStore';
-import { useComponentStore } from '../../store/componentStore';
-import { useUIStore } from '../../store/uiStore';
-import { throttle } from '../../utils/timing';
+import { useCanvasStore } from '@store/canvasStore';
+import { useComponentStore } from '@store/componentStore';
+import { useUIStore } from '@store/uiStore';
+import { throttle } from '@utils/timing';
 import {
   calculateViewport,
   filterVisibleComponents,
   VIRTUALIZATION_THRESHOLD,
-} from '../../utils/virtualCanvas';
+} from '@utils/virtualCanvas';
 
 /**
  * Canvas 组件

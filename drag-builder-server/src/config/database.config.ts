@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ProjectEntity } from '../modules/project';
+import { ProjectEntity } from '@modules/project';
 
 /**
  * 数据库配置

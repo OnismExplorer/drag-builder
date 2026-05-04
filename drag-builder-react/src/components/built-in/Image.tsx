@@ -2,9 +2,9 @@
  * Image 图片组件定义
  */
 
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
-import { getSafeImageUrl } from '../../utils/sanitization';
+import { getSafeImageUrl } from '@utils/sanitization';
 
 /**
  * Image 图片组件定义
@@ -81,6 +81,7 @@ export const imageDefinition: ComponentDefinition = {
     );
   },
   codeGen: {
+    imports: [],
     generateJSX: (component, style) => {
       const src = String(component.content.src || '/placeholder.png');
       const alt = String(component.content.alt || '');

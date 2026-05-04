@@ -6,9 +6,9 @@
  */
 
 import apiClient from './client';
-import type { Project } from '../types/project';
-import type { CanvasConfig } from '../types/canvas';
-import type { ComponentNode } from '../types/component';
+import type { Project } from '@/types/project';
+import type { CanvasConfig } from '@/types/canvas';
+import type { ComponentNode } from '@/types/component';
 
 /**
  * 创建项目请求体

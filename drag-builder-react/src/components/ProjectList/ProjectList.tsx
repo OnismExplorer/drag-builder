@@ -8,11 +8,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layers, Plus, Clock, FolderOpen, AlertCircle, RefreshCw } from 'lucide-react';
-import { getProjects, getProject } from '../../api/projectApi';
-import type { Project } from '../../types/project';
-import { useCanvasStore } from '../../store/canvasStore';
-import { useComponentStore } from '../../store/componentStore';
-import { useUIStore } from '../../store/uiStore';
+import { getProjects, getProject } from '@api/projectApi';
+import type { Project } from '@/types/project';
+import { useCanvasStore } from '@store/canvasStore';
+import { useComponentStore } from '@store/componentStore';
+import { useUIStore } from '@store/uiStore';
 
 /**
  * 格式化时间为相对时间字符串

@@ -2,7 +2,7 @@
  * Tag 标签组件定义
  */
 
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
 
 /**
@@ -120,9 +120,11 @@ export const tagDefinition: ComponentDefinition = {
     );
   },
   codeGen: {
-    generateJSX: (component, style) => {
+    imports: [],
+    generateJSX: (component, style, className) => {
+      const cn = className ?? '';
       const text = String(component.content.text || '标签');
-      return `<span style={${style}}>${text}</span>`;
+      return `<span className="${cn}" style={${style}}>${text}</span>`;
     },
   },
 };

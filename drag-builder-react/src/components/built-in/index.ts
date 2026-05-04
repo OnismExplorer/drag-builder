@@ -4,7 +4,7 @@
  * 在应用启动时调用此函数注册所有内置组件
  */
 
-import { componentRegistry } from '../../store/componentRegistry';
+import { componentRegistry } from '@store/componentRegistry';
 import { divDefinition } from './Div';
 import { buttonDefinition } from './Button';
 import { textDefinition } from './Text';
@@ -34,8 +34,10 @@ export function registerBuiltInComponents(): void {
   componentRegistry.setCategoryOrder([
     { id: 'basic', name: '基础组件', order: 1 },
     { id: 'form', name: '表单组件', order: 2 },
-    { id: 'antd', name: 'Ant Design', order: 3 },
-    { id: 'custom', name: '自定义组件', order: 4 },
+    { id: 'inputs', name: '输入组件', order: 3 },
+    { id: 'display', name: '展示组件', order: 4 },
+    { id: 'antd', name: 'Ant Design', order: 5 },
+    { id: 'custom', name: '自定义组件', order: 6 },
   ]);
 
   console.log(

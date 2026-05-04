@@ -12,15 +12,15 @@
  */
 
 import React, { useMemo, useCallback } from 'react';
-import { useComponentStore } from '../../store/componentStore';
-import { componentRegistry } from '../../store/componentRegistry';
-import type { ComponentNode } from '../../types';
+import { useComponentStore } from '@store/componentStore';
+import { componentRegistry } from '@store/componentRegistry';
+import type { ComponentNode } from '@/types';
 import PositionEditor from './PositionEditor';
 import LayerControl from './LayerControl';
 import ComponentList from './ComponentList';
 import StyleEditor from './StyleEditor';
 import { DynamicPropertyEditor } from './DynamicPropertyEditor';
-import { debounce } from '../../utils/timing';
+import { debounce } from '@utils/timing';
 
 /**
  * PropertyPanel 组件

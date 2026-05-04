@@ -14,11 +14,11 @@
 import React, { useMemo } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Modal } from '../Modal/Modal';
-import { useUIStore } from '../../store/uiStore';
-import { useComponentStore } from '../../store/componentStore';
-import { useCanvasStore } from '../../store/canvasStore';
-import { codeGenerator } from '../../utils/codeGenerator';
+import { Modal } from '@components/Modal/Modal';
+import { useUIStore } from '@store/uiStore';
+import { useComponentStore } from '@store/componentStore';
+import { useCanvasStore } from '@store/canvasStore';
+import { codeGenerator } from '@utils/codeGenerator';
 
 /**
  * CodePreview 组件

@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { useCanvasStore } from '../../store/canvasStore';
+import { useCanvasStore } from '@store/canvasStore';
 
 /**
  * 缩放步长（每次点击增加/减少的比例）

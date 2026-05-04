@@ -9,11 +9,11 @@ import type {
   PropertyGroup,
   AnimationPropertyGroup,
   PropertyValue,
-} from '../../store/componentRegistry';
-import type { AnimationConfig, ComponentNode } from '../../types';
-import { getPropertyValue, setPropertyValue } from '../built-in/utils';
-import { debounce } from '../../utils/timing';
-import { useComponentStore } from '../../store/componentStore';
+} from '@store/componentRegistry';
+import type { AnimationConfig, ComponentNode } from '@/types';
+import { getPropertyValue, setPropertyValue } from '@components/built-in/utils';
+import { debounce } from '@utils/timing';
+import { useComponentStore } from '@store/componentStore';
 
 interface DynamicPropertyEditorProps {
   groups: (PropertyGroup | AnimationPropertyGroup)[];

@@ -20,7 +20,7 @@
  */
 
 import React from 'react';
-import { useUIStore } from '../../store/uiStore';
+import { useUIStore } from '@store/uiStore';
 
 /**
  * SnappingGuides 组件

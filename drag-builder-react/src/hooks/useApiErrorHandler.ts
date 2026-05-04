@@ -11,8 +11,8 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useUIStore } from '../store/uiStore';
-import { ApiError } from '../api/client';
+import { useUIStore } from '@store/uiStore';
+import { ApiError } from '@api/client';
 
 /**
  * 全局 API 错误处理器

@@ -6,21 +6,21 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
-import { Canvas } from '../components/Canvas';
-import { MaterialPanel, MATERIAL_CONFIGS } from '../components';
-import PropertyPanel from '../components/PropertyPanel/PropertyPanel';
-import { Toolbar } from '../components/Toolbar';
-import { CodePreview } from '../components/CodePreview/CodePreview';
-import { useComponentStore } from '../store';
-import { useCanvasStore } from '../store';
-import { useUIStore } from '../store';
-import { createDefaultComponent } from '../components';
-import { SnappingEngine } from '../utils';
-import { createVirtualGroupComponent } from '../utils/multiSelectBounds';
-import { throttle } from '../utils/timing';
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { createProject } from '../api';
-import type { ComponentType, ComponentNode } from '../types';
+import { Canvas } from '@components/Canvas';
+import { MaterialPanel, MATERIAL_CONFIGS } from '@components';
+import PropertyPanel from '@components/PropertyPanel/PropertyPanel';
+import { Toolbar } from '@components/Toolbar';
+import { CodePreview } from '@components/CodePreview/CodePreview';
+import { useComponentStore } from '@store';
+import { useCanvasStore } from '@store';
+import { useUIStore } from '@store';
+import { createDefaultComponent } from '@components';
+import { SnappingEngine } from '@utils';
+import { createVirtualGroupComponent } from '@utils/multiSelectBounds';
+import { throttle } from '@utils/timing';
+import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
+import { createProject } from '@api';
+import type { ComponentType, ComponentNode } from '@/types';
 
 /**
  * 自定义传感器：过滤掉带有 data-no-dnd 属性的元素

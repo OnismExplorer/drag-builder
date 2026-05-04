@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useComponentStore } from '../store/componentStore';
+import { useComponentStore } from '@store/componentStore';
 
 /**
  * 判断当前焦点是否在输入框中

@@ -16,7 +16,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { useComponentStore } from '../../store/componentStore';
+import { useComponentStore } from '@store/componentStore';
 
 interface LayerControlProps {
   componentId: string;

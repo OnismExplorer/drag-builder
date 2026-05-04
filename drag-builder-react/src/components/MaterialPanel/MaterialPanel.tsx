@@ -17,8 +17,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { MaterialItem } from './MaterialItem';
 import { FloatingPreview } from './FloatingPreview';
-import { componentRegistry } from '../../store/componentRegistry';
-import type { MaterialConfig } from '../../store/componentRegistry';
+import { componentRegistry } from '@store/componentRegistry';
+import type { MaterialConfig } from '@store/componentRegistry';
 
 /**
  * MaterialPanel 组件

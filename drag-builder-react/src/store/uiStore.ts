@@ -7,7 +7,7 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { SnapLine } from '../utils/snapping';
+import type { SnapLine } from '@utils/snapping';
 
 /**
  * Toast 状态接口

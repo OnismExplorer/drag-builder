@@ -13,10 +13,10 @@
 
 import React, { useState } from 'react';
 import type { AxiosError } from 'axios';
-import { useUIStore } from '../../store/uiStore';
-import { useCanvasStore } from '../../store/canvasStore';
-import { useComponentStore } from '../../store/componentStore';
-import { createProject } from '../../api/projectApi';
+import { useUIStore } from '@store/uiStore';
+import { useCanvasStore } from '@store/canvasStore';
+import { useComponentStore } from '@store/componentStore';
+import { createProject } from '@api/projectApi';
 import ZoomControl from './ZoomControl';
 
 /**

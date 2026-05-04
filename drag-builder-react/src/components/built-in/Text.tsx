@@ -2,7 +2,7 @@
  * Text 文本组件定义
  */
 
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
 
 /**
@@ -86,6 +86,7 @@ export const textDefinition: ComponentDefinition = {
     );
   },
   codeGen: {
+    imports: [],
     generateJSX: (component, style) => {
       const text = String(component.content.text || '文本内容');
       return `<p className="m-0" style={${style}}>${text}</p>`;

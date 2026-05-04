@@ -12,9 +12,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from './Modal';
-import { useUIStore } from '../../store';
-import { useCanvasStore } from '../../store';
-import { CANVAS_PRESETS, type CanvasPreset } from '../../types';
+import { useUIStore } from '@store';
+import { useCanvasStore } from '@store';
+import { CANVAS_PRESETS, type CanvasPreset } from '@/types';
 
 /**
  * 预设选项配置

@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import type { ComponentNode } from '../../types';
+import type { ComponentNode } from '@/types';
 import { AdvancedColorPicker } from './AdvancedColorPicker';
 
 interface StyleEditorProps {

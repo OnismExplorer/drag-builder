@@ -3,9 +3,9 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
-import { useComponentStore } from '../../store/componentStore';
+import { useComponentStore } from '@store/componentStore';
 
 /**
  * Checkbox 多选组件定义
@@ -180,6 +180,7 @@ export const checkboxDefinition: ComponentDefinition = {
     );
   },
   codeGen: {
+    imports: [],
     generateJSX: (component, style) => {
       const options = component.content.options || [];
       const optionsJSX = options

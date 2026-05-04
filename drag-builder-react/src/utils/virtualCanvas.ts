@@ -5,7 +5,7 @@
  * 需求：14.1
  */
 
-import type { ComponentNode } from '../types';
+import type { ComponentNode } from '@/types';
 
 /**
  * 可视区域矩形

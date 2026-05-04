@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useColorHistoryStore } from '../../store/colorHistoryStore';
+import { useColorHistoryStore } from '@store/colorHistoryStore';
 
 interface AdvancedColorPickerProps {
   value: string;

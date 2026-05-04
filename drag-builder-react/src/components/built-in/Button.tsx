@@ -2,7 +2,7 @@
  * Button 按钮组件定义
  */
 
-import type { ComponentDefinition } from '../../store/componentRegistry';
+import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle, generateClassName } from './utils';
 
 /**
@@ -109,10 +109,11 @@ export const buttonDefinition: ComponentDefinition = {
     );
   },
   codeGen: {
-    generateJSX: (component, style) => {
-      const className = generateClassName(component);
+    imports: [],
+    generateJSX: (component, style, className) => {
+      const cn = className ?? generateClassName(component);
       const text = String(component.content.text || '按钮');
-      return `<button className="${className}" style={${style}}>${text}</button>`;
+      return `<button className="${cn}" style={${style}}>${text}</button>`;
     },
   },
 };

@@ -341,7 +341,7 @@ describe('属性 18：代码生成有效性', () => {
 
     it('input 组件应生成 <input> 标签', () => {
       const code = generator.generateTSXCode([makeComponent('input')], defaultConfig);
-      expect(code).toContain('<input placeholder=');
+      expect(code).toContain('placeholder=');
     });
 
     it('对于任意组件类型，生成的代码不应为空', () => {

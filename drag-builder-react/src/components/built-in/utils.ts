@@ -2,8 +2,8 @@
  * Built-in 组件共享工具函数
  */
 
-import type { ComponentNode } from '../../types';
-import type { PropertyValue } from '../../store/componentRegistry';
+import type { ComponentNode } from '@/types';
+import type { PropertyValue } from '@store/componentRegistry';
 
 /**
  * 生成视觉样式对象（不含定位属性）
@@ -132,10 +132,25 @@ export function generateClassName(component: ComponentNode): string {
 
   if (component.styles.borderRadius !== undefined) {
     const radius = component.styles.borderRadius;
-    if (radius <= 4) classes.push('rounded');
-    else if (radius <= 8) classes.push('rounded-lg');
-    else if (radius <= 16) classes.push('rounded-2xl');
-    else classes.push('rounded-3xl');
+    if (radius === 0) {
+      // no class
+    } else if (radius <= 2) {
+      classes.push('rounded-sm');
+    } else if (radius <= 4) {
+      classes.push('rounded');
+    } else if (radius <= 6) {
+      classes.push('rounded-md');
+    } else if (radius <= 8) {
+      classes.push('rounded-lg');
+    } else if (radius <= 12) {
+      classes.push('rounded-xl');
+    } else if (radius <= 16) {
+      classes.push('rounded-2xl');
+    } else if (radius <= 24) {
+      classes.push('rounded-3xl');
+    } else {
+      classes.push('rounded-full');
+    }
   }
 
   return classes.join(' ');
@@ -170,8 +185,6 @@ export function setPropertyValue(
   newValue: any
 ): Partial<ComponentNode> {
   const parts = key.split('.');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: Record<string, any> = {};
 
   if (parts.length === 1) {
     // 直接属性
@@ -193,20 +206,33 @@ export function setPropertyValue(
     return { [key]: newValue };
   }
 
-  // 嵌套属性，如 content.text, props.type
-  const [parent, child] = parts;
-  if (parent === 'content') {
-    return { content: { ...component.content, [child]: newValue } };
-  }
-  if (parent === 'styles') {
-    return { styles: { ...component.styles, [child]: newValue } };
-  }
-  if (parent === 'position') {
-    return { position: { ...component.position, [child]: newValue } };
-  }
-  if (parent === 'props') {
-    return { props: { ...component.props, [child]: newValue } };
-  }
+  // 嵌套属性，如 content.text, props.type, props.triggers.onClick
+  const rootKey = parts[0];
 
-  return result;
+  // 获取现有根对象
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let existingRoot: any;
+  if (rootKey === 'position') existingRoot = component.position;
+  else if (rootKey === 'styles') existingRoot = component.styles;
+  else if (rootKey === 'content') existingRoot = component.content;
+  else if (rootKey === 'props') existingRoot = component.props || {};
+  else existingRoot = (component as Record<string, unknown>)[rootKey] || {};
+
+  // 深拷贝现有根对象
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const newRoot: any = existingRoot ? JSON.parse(JSON.stringify(existingRoot)) : {};
+
+  // 沿路径创建嵌套对象并设置最终值
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let current: any = newRoot;
+  for (let i = 1; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {
+      current[part] = {};
+    }
+    current = current[part];
+  }
+  current[parts[parts.length - 1]] = newValue;
+
+  return { [rootKey]: newRoot } as Partial<ComponentNode>;
 }

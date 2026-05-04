@@ -9,11 +9,13 @@
  * - 文字从下往上滑入淡入效果
  * - 浮层从左向右位移和透明度变化
  * - 与组件位置水平对齐
+ * - 支持 lucide 和 @ant-design/icons 两种图标源
  */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { MaterialConfig } from '../../store/componentRegistry';
+import type { MaterialConfig } from '@store/componentRegistry';
+import { isAntdIcon, getAntdIconSync } from '@components/adapters/antd/shared/iconMap';
 
 interface FloatingPreviewProps {
   config: MaterialConfig | null;
@@ -131,6 +133,19 @@ const getMediumComponentIcon = (type: string) => {
 };
 
 /**
+ * 获取预览图标（支持 antd 图标和内置 SVG fallback）
+ */
+const getPreviewIcon = (config: MaterialConfig): React.ReactNode => {
+  if (config.iconSource === 'antd' && isAntdIcon(config.icon)) {
+    const IconComponent = getAntdIconSync(config.icon);
+    if (IconComponent) {
+      return <IconComponent style={{ fontSize: 40 }} />;
+    }
+  }
+  return getMediumComponentIcon(config.type);
+};
+
+/**
  * FloatingPreview 组件
  * 在面板右侧显示浮动预览卡片，与触发元素水平对齐
  */
@@ -200,7 +215,7 @@ export const FloatingPreview: React.FC<FloatingPreviewProps> = ({
                 `,
               }}
             >
-              {getMediumComponentIcon(config.type)}
+              {getPreviewIcon(config)}
             </div>
           </div>
 

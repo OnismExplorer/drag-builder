@@ -2,7 +2,7 @@
  * 多选组件边界框计算工具
  */
 
-import type { ComponentNode } from '../types';
+import type { ComponentNode } from '@/types';
 
 /**
  * 多选组件的边界框

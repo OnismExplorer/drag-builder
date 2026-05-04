@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Layers, Sparkles, Code2, Zap } from 'lucide-react';
-import { useUIStore } from '../store/uiStore';
-import { FeatureCard } from '../components/FeatureCard';
-import { PixelSnow } from '../components/PixelSnow';
-import ProjectList from '../components/ProjectList/ProjectList';
+import { Code2, Layers, Sparkles, Zap } from 'lucide-react';
+import { useUIStore } from '@store/uiStore';
+import { FeatureCard } from '@components/FeatureCard';
+import { PixelSnow } from '@components/PixelSnow';
+import ProjectList from '@components/ProjectList/ProjectList';
 
 export default function HomePage() {
   const { openCanvasSizeModal } = useUIStore();
@@ -30,7 +30,7 @@ export default function HomePage() {
           />
         </div>
         {/* Header - 保持在顶部且不占用高度（absolute 或透明 sticky） */}
-        <header className="relative z-50 border-b border-white/5 backdrop-blur-md sticky top-0 bg-black/10">
+        <header className="relative z-50 border-b border-white/5 backdrop-blur-md top-0 bg-black/10">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between max-w-7xl">
             <div className="flex items-center gap-2 group cursor-pointer">
               <div className="relative w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">

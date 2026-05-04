@@ -4,12 +4,12 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { CanvasSizeModal, Toast } from './components';
-import EditorPage from './pages/EditorPage';
-import HomePage from './pages/HomePage';
-import { ResponsiveGuard } from './components/ResponsiveGuard/ResponsiveGuard';
-import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
-import { useApiErrorHandler } from './hooks/useApiErrorHandler';
+import { CanvasSizeModal, Toast } from '@/components';
+import EditorPage from '@/pages/EditorPage';
+import HomePage from '@/pages/HomePage';
+import { ResponsiveGuard } from '@/components/ResponsiveGuard/ResponsiveGuard';
+import ErrorBoundary from '@/components/ErrorBoundary/ErrorBoundary';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 
 /**
  * App 根组件

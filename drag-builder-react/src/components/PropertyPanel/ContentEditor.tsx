@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import type { ComponentNode } from '../../types';
+import type { ComponentNode } from '@/types';
 
 interface ContentEditorProps {
   component: ComponentNode;

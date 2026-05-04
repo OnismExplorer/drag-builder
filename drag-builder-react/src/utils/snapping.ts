@@ -9,7 +9,7 @@
  * - 6.4: 检测到对齐时自动吸附（误差 ±2px）
  */
 
-import type { ComponentNode } from '../types';
+import type { ComponentNode } from '@/types';
 
 /**
  * 矩形边界接口

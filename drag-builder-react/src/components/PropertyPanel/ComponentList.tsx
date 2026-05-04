@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { useComponentStore } from '../../store/componentStore';
-import type { ComponentNode, ComponentType } from '../../types';
+import { useComponentStore } from '@store/componentStore';
+import type { ComponentNode, ComponentType } from '@/types';
 
 /**
  * 组件类型图标映射

@@ -16,7 +16,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUIStore } from '../../store/uiStore';
+import { useUIStore } from '@store/uiStore';
 
 /**
  * 根据位置获取对应的 CSS 类名

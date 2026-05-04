@@ -104,7 +104,26 @@ export interface ComponentNode {
   content: ComponentContent; // 内容配置
   animation?: AnimationConfig; // 动画配置（可选）
   children?: ComponentNode[]; // 子组件（支持嵌套）
-  props?: Record<string, PropertyValue>; // 组件特有属性（用于适配器组件）
+  props?: ComponentProps; // 组件特有属性（用于适配器组件）
+}
+
+/**
+ * 组件属性配置
+ */
+export interface ComponentProps {
+  // 组件特有属性
+  [key: string]: PropertyValue | TriggerConfig | undefined;
+  // 触发器配置（可选）
+  triggers?: TriggerConfig;
+}
+
+/**
+ * 触发器配置
+ * 用于组件间联动，如 Button 点击触发 Modal 打开
+ */
+export interface TriggerConfig {
+  onClick?: string; // 目标组件 ID
+  onChange?: string; // 目标组件 ID（用于其他事件）
 }
 
 /**

@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import type { ComponentNode } from '../../types';
+import type { ComponentNode } from '@/types';
 
 interface PositionEditorProps {
   component: ComponentNode;

@@ -5,7 +5,7 @@
  * 需求：3.6 - 组件生成时应用默认样式
  */
 
-import type { ComponentType, ComponentNode } from '../../types';
+import type { ComponentType, ComponentNode } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

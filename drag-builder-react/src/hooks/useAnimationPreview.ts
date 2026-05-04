@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AnimationConfig } from '../types';
+import type { AnimationConfig } from '@/types';
 
 /**
  * 动画预览 Hook

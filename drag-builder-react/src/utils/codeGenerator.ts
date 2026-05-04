@@ -8,8 +8,8 @@
  * - framer-motion 动画导出
  */
 
-import type { ComponentNode, CanvasConfig } from '../types';
-import { componentRegistry } from '../store/componentRegistry';
+import type { ComponentNode, CanvasConfig } from '@/types';
+import { componentRegistry } from '@store/componentRegistry';
 
 /**
  * 导出模式
@@ -59,9 +59,9 @@ export class CodeGenerator {
       };
     }
 
-    // 生成 imports
+    // 生成 imports（包括组件定义的 imports）
     const needsFramerMotion = includeAnimation && components.some(c => c.animation);
-    const imports = this.generateImports({ includeAnimation: needsFramerMotion });
+    const imports = this.generateImports(components, { includeAnimation: needsFramerMotion });
 
     // 生成 CSS（仅 CSS 模式）
     let css: string | undefined;
@@ -209,14 +209,27 @@ export default GeneratedPage;`;
   /**
    * 生成 import 语句
    */
-  private generateImports(options: ExportOptions = {}): string {
+  private generateImports(components: ComponentNode[], options: ExportOptions = {}): string {
     const imports: string[] = [`import React from 'react';`];
+
+    // 收集所有组件定义的 imports
+    const allImports = new Set<string>();
+    for (const component of components) {
+      const def = componentRegistry.get(component.type);
+      if (def?.codeGen.imports) {
+        def.codeGen.imports.forEach(imp => allImports.add(imp));
+      }
+    }
+
+    // 添加组件定义的 imports
+    allImports.forEach(imp => imports.push(imp));
 
     if (options.includeAnimation) {
       imports.push(`import { motion } from 'framer-motion';`);
     }
 
-    return imports.join('\n');
+    // 去重并返回
+    return [...new Set(imports)].join('\n');
   }
 
   /**
@@ -252,18 +265,16 @@ export default GeneratedPage;`;
    * 生成单个组件的 JSX
    */
   private generateComponentJSX(component: ComponentNode, options: ExportOptions): string {
+    // 预计算 style 与 className（供 Registry 生成器或 fallback 使用）
+    const style = options.mode === 'css' ? '{}' : this.generateInlineStyle(component);
+    const className =
+      options.mode === 'css'
+        ? this.generateUniqueClassName(component)
+        : this.generateClassName(component);
+
     // 优先使用 Registry 的代码生成器
     const def = componentRegistry.get(component.type);
     if (def?.codeGen.generateJSX) {
-      const style =
-        options.mode === 'css'
-          ? '{}' // CSS 模式下不需要内联样式
-          : this.generateInlineStyle(component);
-      const className =
-        options.mode === 'css'
-          ? this.generateUniqueClassName(component)
-          : this.generateClassName(component);
-
       // 如果有动画，使用 motion.div
       if (options.includeAnimation && component.animation) {
         return this.generateMotionComponent(component, style, className, def.codeGen.generateJSX);
@@ -273,13 +284,6 @@ export default GeneratedPage;`;
     }
 
     // Fallback: 使用内置生成
-    const style = options.mode === 'css' ? '{}' : this.generateInlineStyle(component);
-    const className =
-      options.mode === 'css'
-        ? this.generateUniqueClassName(component)
-        : this.generateClassName(component);
-
-    // 如果有动画，使用 motion.div
     if (options.includeAnimation && component.animation) {
       return this.generateMotionComponent(component, style, className, undefined);
     }

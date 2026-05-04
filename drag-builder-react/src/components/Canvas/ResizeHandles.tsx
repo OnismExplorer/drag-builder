@@ -12,17 +12,17 @@
  */
 
 import React, { useCallback, useState, useEffect } from 'react';
-import type { ComponentNode } from '../../types';
-import { useComponentStore } from '../../store/componentStore';
-import { useCanvasStore } from '../../store/canvasStore';
-import { useUIStore } from '../../store/uiStore';
-import { SnappingEngine, type SnapLine } from '../../utils/snapping';
+import type { ComponentNode } from '@/types';
+import { useComponentStore } from '@store/componentStore';
+import { useCanvasStore } from '@store/canvasStore';
+import { useUIStore } from '@store/uiStore';
+import { SnappingEngine, type SnapLine } from '@utils/snapping';
 import {
   findComponentsInside,
   calculateRelativePosition,
   applyRelativePosition,
   type RelativePosition,
-} from '../../utils/componentNesting';
+} from '@utils/componentNesting';
 
 /**
  * 手柄类型

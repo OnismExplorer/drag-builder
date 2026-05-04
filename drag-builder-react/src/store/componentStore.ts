@@ -8,7 +8,7 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { ComponentNode } from '../types';
+import type { ComponentNode } from '@/types';
 
 /**
  * 历史记录快照（用于撤销/重做）
@@ -175,6 +175,14 @@ export const useComponentStore = create<ComponentStore>()(
             component.content = {
               ...component.content,
               ...updates.content,
+            };
+          }
+
+          // 更新 props（如果提供）
+          if (updates.props) {
+            component.props = {
+              ...(component.props || {}),
+              ...updates.props,
             };
           }
 
@@ -422,12 +430,14 @@ export const useComponentStore = create<ComponentStore>()(
      */
     undo: () => {
       const { history, historyIndex } = get();
-      if (historyIndex <= 0) return;
+      if (historyIndex < 0) return;
 
       set(state => {
+        const snapshot = history[historyIndex];
+        if (snapshot) {
+          state.components = JSON.parse(JSON.stringify(snapshot.components));
+        }
         state.historyIndex = historyIndex - 1;
-        const snapshot = history[historyIndex - 1];
-        state.components = JSON.parse(JSON.stringify(snapshot.components));
         state.selectedId = null;
         state.selectedIds = [];
       });
