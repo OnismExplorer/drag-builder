@@ -6,8 +6,11 @@
 import React from 'react';
 import type { ComponentAdapter, ComponentDefinition, RenderProps } from '@store/componentRegistry';
 import { useComponentStore } from '@store/componentStore';
-import type { ComponentNode } from '@/types';
-import type { AntdComponentConfig, AntdCategoryConfig } from './types';
+import type { ComponentNode, TabItem } from '@/types';
+import type { AntdComponentConfig } from './types';
+
+// 动态加载的 antd 组件统一使用宽泛类型，避免静态 props 校验
+type AntdComponentType = React.ComponentType<Record<string, unknown>>;
 
 // 预加载的 antd 模块缓存
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -149,11 +152,7 @@ const createRenderFunction = (config: AntdComponentConfig) => {
 
 // ============== 各组件渲染函数 ==============
 
-const renderButton = (
-  Button: React.ComponentType<unknown>,
-  component: ComponentNode,
-  props: RenderProps
-) => {
+const renderButton = (Button: AntdComponentType, component: ComponentNode, props: RenderProps) => {
   const btnProps = (component.props || {}) as Record<string, unknown>;
 
   const handleClick = (e: React.MouseEvent) => {
@@ -187,7 +186,7 @@ const renderButton = (
   );
 };
 
-const renderInput = (Input: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderInput = (Input: AntdComponentType, component: ComponentNode) => {
   const inputProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Input
@@ -200,12 +199,29 @@ const renderInput = (Input: React.ComponentType<unknown>, component: ComponentNo
   );
 };
 
-const renderSelect = (Select: React.ComponentType<unknown>, component: ComponentNode) => {
+/**
+ * 将 options 统一转换为 { value, label } 格式
+ * 兼容基础组件 { id, label, checked } 和 antd { value, label } 两种结构
+ */
+const normalizeOptions = (
+  rawOptions:
+    | Array<{ value: string; label: string }>
+    | Array<{ id: string; label: string; checked: boolean }>
+    | undefined
+): Array<{ value: string; label: string }> => {
+  return (rawOptions ?? []).map(opt =>
+    'value' in opt ? opt : { value: opt.id || opt.label, label: opt.label }
+  );
+};
+
+const renderSelect = (Select: AntdComponentType, component: ComponentNode) => {
   const selectProps = (component.props || {}) as Record<string, unknown>;
-  const options = (component.content?.options as Array<{ value: string; label: string }>) || [
-    { value: 'option1', label: '选项 1' },
-    { value: 'option2', label: '选项 2' },
-  ];
+  const options = normalizeOptions(
+    component.content?.options as
+      | Array<{ value: string; label: string }>
+      | Array<{ id: string; label: string; checked: boolean }>
+      | undefined
+  );
   return (
     <Select
       placeholder={String(component.content?.placeholder || '请选择')}
@@ -217,7 +233,7 @@ const renderSelect = (Select: React.ComponentType<unknown>, component: Component
   );
 };
 
-const renderDatePicker = (DatePicker: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderDatePicker = (DatePicker: AntdComponentType, component: ComponentNode) => {
   const dpProps = (component.props || {}) as Record<string, unknown>;
   return (
     <DatePicker
@@ -229,10 +245,10 @@ const renderDatePicker = (DatePicker: React.ComponentType<unknown>, component: C
   );
 };
 
-const renderModal = (Modal: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderModal = (ModalComponent: AntdComponentType, component: ComponentNode) => {
   const modalProps = (component.props || {}) as Record<string, unknown>;
   return (
-    <Modal
+    <ModalComponent
       open={(modalProps.open as boolean) || false}
       title={String(component.content?.title || '弹窗标题')}
       width={(modalProps.width as number) || 520}
@@ -240,11 +256,11 @@ const renderModal = (Modal: React.ComponentType<unknown>, component: ComponentNo
       className="w-full"
     >
       <div className="text-slate-600">{String(component.content?.content || '弹窗内容')}</div>
-    </Modal>
+    </ModalComponent>
   );
 };
 
-const renderSwitch = (Switch: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderSwitch = (Switch: AntdComponentType, component: ComponentNode) => {
   const switchProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Switch
@@ -255,18 +271,18 @@ const renderSwitch = (Switch: React.ComponentType<unknown>, component: Component
   );
 };
 
-const renderCheckbox = (Checkbox: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderCheckbox = (Checkbox: AntdComponentType, component: ComponentNode) => {
   const cbProps = (component.props || {}) as Record<string, unknown>;
-  const options = (component.content?.options as Array<{
-    value: string;
-    label: string;
-    checked?: boolean;
-  }>) || [
-    { value: 'option1', label: '选项 1', checked: false },
-    { value: 'option2', label: '选项 2', checked: false },
-  ];
+  const options = normalizeOptions(
+    component.content?.options as
+      | Array<{ value: string; label: string }>
+      | Array<{ id: string; label: string; checked: boolean }>
+      | undefined
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CheckboxGroup = (Checkbox as any).Group as AntdComponentType;
   return (
-    <Checkbox.Group
+    <CheckboxGroup
       options={options}
       disabled={cbProps.disabled as boolean}
       layout={(cbProps.layout as string) || 'horizontal'}
@@ -274,16 +290,20 @@ const renderCheckbox = (Checkbox: React.ComponentType<unknown>, component: Compo
   );
 };
 
-const renderRadio = (Radio: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderRadio = (Radio: AntdComponentType, component: ComponentNode) => {
   const radioProps = (component.props || {}) as Record<string, unknown>;
-  const options = (component.content?.options as Array<{ value: string; label: string }>) || [
-    { value: 'option1', label: '选项 1' },
-    { value: 'option2', label: '选项 2' },
-  ];
-  return <Radio.Group options={options} disabled={radioProps.disabled as boolean} />;
+  const options = normalizeOptions(
+    component.content?.options as
+      | Array<{ value: string; label: string }>
+      | Array<{ id: string; label: string; checked: boolean }>
+      | undefined
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const RadioGroup = (Radio as any).Group as AntdComponentType;
+  return <RadioGroup options={options} disabled={radioProps.disabled as boolean} />;
 };
 
-const renderInputNumber = (InputNumber: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderInputNumber = (InputNumber: AntdComponentType, component: ComponentNode) => {
   const inProps = (component.props || {}) as Record<string, unknown>;
   return (
     <InputNumber
@@ -296,7 +316,7 @@ const renderInputNumber = (InputNumber: React.ComponentType<unknown>, component:
   );
 };
 
-const renderSlider = (Slider: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderSlider = (Slider: AntdComponentType, component: ComponentNode) => {
   const slProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Slider
@@ -309,11 +329,7 @@ const renderSlider = (Slider: React.ComponentType<unknown>, component: Component
   );
 };
 
-const renderCard = (
-  Card: React.ComponentType<unknown>,
-  component: ComponentNode,
-  props: RenderProps
-) => {
+const renderCard = (Card: AntdComponentType, component: ComponentNode, props: RenderProps) => {
   const cardProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Card
@@ -327,7 +343,7 @@ const renderCard = (
   );
 };
 
-const renderTag = (Tag: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderTag = (Tag: AntdComponentType, component: ComponentNode) => {
   const tagProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Tag color={(tagProps.color as string) || 'blue'} closable={tagProps.closable as boolean}>
@@ -336,7 +352,7 @@ const renderTag = (Tag: React.ComponentType<unknown>, component: ComponentNode) 
   );
 };
 
-const renderProgress = (Progress: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderProgress = (Progress: AntdComponentType, component: ComponentNode) => {
   const progProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Progress
@@ -348,7 +364,7 @@ const renderProgress = (Progress: React.ComponentType<unknown>, component: Compo
   );
 };
 
-const renderAlert = (Alert: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderAlert = (Alert: AntdComponentType, component: ComponentNode) => {
   const alertProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Alert
@@ -361,20 +377,64 @@ const renderAlert = (Alert: React.ComponentType<unknown>, component: ComponentNo
   );
 };
 
-const renderTabs = (Tabs: React.ComponentType<unknown>, component: ComponentNode) => {
+const StableTabs: React.FC<{
+  Tabs: AntdComponentType;
+  type: string;
+  items: TabItem[];
+  tabPosition: string;
+}> = React.memo(
+  ({ Tabs, type, items, tabPosition }) => {
+    const [activeKey, setActiveKey] = React.useState(() => items[0]?.key || '1');
+
+    const currentActiveKey = items.some(item => item.key === activeKey)
+      ? activeKey
+      : items[0]?.key || '1';
+
+    return (
+      <Tabs
+        type={type}
+        tabPosition={tabPosition}
+        items={items}
+        activeKey={currentActiveKey}
+        onChange={(key: string) => setActiveKey(key)}
+        style={{ overflow: 'hidden' }}
+      />
+    );
+  },
+  (prev, next) => {
+    if (prev.Tabs !== next.Tabs) return false;
+    if (prev.type !== next.type) return false;
+    if (prev.tabPosition !== next.tabPosition) return false;
+    if (prev.items === next.items) return true;
+    if (prev.items.length !== next.items.length) return false;
+    return prev.items.every(
+      (item, i) =>
+        item.key === next.items[i].key &&
+        item.label === next.items[i].label &&
+        item.children === next.items[i].children
+    );
+  }
+);
+
+const DEFAULT_TAB_ITEMS: TabItem[] = [
+  { key: '1', label: '标签 1', children: '内容 1' },
+  { key: '2', label: '标签 2', children: '内容 2' },
+];
+
+const renderTabs = (Tabs: AntdComponentType, component: ComponentNode) => {
   const tabProps = (component.props || {}) as Record<string, unknown>;
-  const items = (component.content?.items as Array<{
-    key: string;
-    label: string;
-    children?: string;
-  }>) || [
-    { key: '1', label: '标签 1', children: '内容 1' },
-    { key: '2', label: '标签 2', children: '内容 2' },
-  ];
-  return <Tabs type={(tabProps.type as string) || 'line'} items={items} />;
+  const items = (component.content?.items as TabItem[]) || DEFAULT_TAB_ITEMS;
+  return (
+    <StableTabs
+      Tabs={Tabs}
+      type={(tabProps.type as string) || 'line'}
+      tabPosition={(tabProps.tabPosition as string) || 'top'}
+      items={items}
+    />
+  );
 };
 
-const renderAvatar = (Avatar: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderAvatar = (Avatar: AntdComponentType, component: ComponentNode) => {
   const avatarProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Avatar
@@ -386,7 +446,7 @@ const renderAvatar = (Avatar: React.ComponentType<unknown>, component: Component
   );
 };
 
-const renderBadge = (Badge: React.ComponentType<unknown>, component: ComponentNode) => {
+const renderBadge = (Badge: AntdComponentType, component: ComponentNode) => {
   const badgeProps = (component.props || {}) as Record<string, unknown>;
   return (
     <Badge
@@ -484,11 +544,12 @@ const generateSelectJSX = (component: ComponentNode, props: Record<string, unkno
   const mode = props.mode ? ` mode="${props.mode}"` : '';
   const disabled = props.disabled ? ' disabled' : '';
   const placeholder = component.content?.placeholder || '请选择';
-  const options = (component.content?.options as Array<{ value: string; label: string }>) || [];
+  const rawOptions =
+    (component.content?.options as Array<{ value: string; label: string }> | undefined) ?? [];
 
   const optionsStr =
-    options.length > 0
-      ? `\n    options={[\n      ${options.map(o => `{ value: '${o.value}', label: '${o.label}' }`).join(',\n      ')}\n    ]}`
+    rawOptions.length > 0
+      ? `\n    options={[\n      ${rawOptions.map(o => `{ value: '${o.value}', label: '${o.label}' }`).join(',\n      ')}\n    ]}`
       : '';
 
   return `<Select${mode}${disabled} placeholder="${placeholder}"${optionsStr}
@@ -540,15 +601,6 @@ export const createAntdAdapter = (configs: AntdComponentConfig[]): ComponentAdap
     components,
   };
 };
-
-/**
- * 预设分类配置
- */
-export const ANTD_CATEGORIES: AntdCategoryConfig[] = [
-  { id: 'form', name: '表单组件', order: 1 },
-  { id: 'inputs', name: '输入组件', order: 2 },
-  { id: 'display', name: '展示组件', order: 3 },
-];
 
 /**
  * 预加载 antd 和 antd-icons

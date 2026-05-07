@@ -15,7 +15,27 @@ export type ComponentType =
   | 'input'
   | 'radio'
   | 'checkbox'
-  | 'tag';
+  | 'tag'
+  | 'antd-button'
+  | 'antd-input'
+  | 'antd-select'
+  | 'antd-datepicker'
+  | 'antd-modal'
+  | 'antd-switch'
+  | 'antd-checkbox'
+  | 'antd-radio'
+  | 'antd-inputnumber'
+  | 'antd-slider'
+  | 'antd-card'
+  | 'antd-tag'
+  | 'antd-progress'
+  | 'antd-alert'
+  | 'antd-tabs'
+  | 'antd-avatar'
+  | 'antd-badge'
+  | 'antd-table'
+  | 'antd-cascader'
+  | 'antd-treeselect';
 
 /**
  * 位置和尺寸
@@ -65,7 +85,32 @@ export interface ComponentContent {
   src?: string; // 图片 URL
   placeholder?: string; // 占位符文本
   alt?: string; // 图片替代文本
+  title?: string; // 标题（antd-modal、antd-card）
+  message?: string; // 消息（antd-alert）
+  description?: string; // 描述（antd-alert）
+  content?: string; // 内容文本（antd-modal、antd-card）
   options?: RadioCheckboxOption[]; // 单选/多选选项列表
+  items?: TabItem[]; // 标签页选项（antd-tabs）
+  columns?: TableColumn[]; // 表格列配置（antd-table）
+  dataSource?: Record<string, string>[]; // 表格数据源（antd-table）
+}
+
+/**
+ * 标签页选项
+ */
+export interface TabItem {
+  key: string;
+  label: string;
+  children?: string;
+}
+
+/**
+ * 表格列配置
+ */
+export interface TableColumn {
+  title: string;
+  dataIndex: string;
+  key: string;
 }
 
 /**

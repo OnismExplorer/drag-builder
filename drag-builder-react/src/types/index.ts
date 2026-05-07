@@ -10,8 +10,14 @@ export type {
   ShadowConfig,
   ComponentStyles,
   ComponentContent,
+  RadioCheckboxOption,
+  TabItem,
+  TableColumn,
   AnimationConfig,
   ComponentNode,
+  ComponentProps,
+  TriggerConfig,
+  PropertyValue,
 } from './component';
 
 // 画布相关类型

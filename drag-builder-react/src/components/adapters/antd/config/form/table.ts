@@ -77,14 +77,12 @@ export const antdTableConfig: AntdComponentConfig = {
             null,
             2
           ),
-          description: 'JSON 格式的列配置数组',
         },
         {
           key: 'content.dataSource',
           label: '数据源',
           type: 'string',
           defaultValue: JSON.stringify([{ key: '1', col1: '数据1', col2: '数据2' }], null, 2),
-          description: 'JSON 格式的数据数组',
         },
       ],
     },

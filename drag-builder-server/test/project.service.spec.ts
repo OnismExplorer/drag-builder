@@ -104,7 +104,13 @@ describe('ProjectService', () => {
 
     it('应该将 componentsTree 原样传递给 repository', async () => {
       const components = [
-        { id: 'comp-1', type: 'div', position: { x: 0, y: 0, width: 100, height: 100, zIndex: 0 } },
+        {
+          id: 'comp-1',
+          type: 'div',
+          position: { x: 0, y: 0, width: 100, height: 100, zIndex: 0 },
+          styles: {},
+          content: {},
+        },
       ];
       const dto = makeCreateDto({ componentsTree: components });
       const entity = makeProject({ componentsTree: components });
@@ -307,7 +313,15 @@ describe('ProjectService', () => {
 
     it('应该支持仅更新 componentsTree', async () => {
       const entity = makeProject();
-      const newTree = [{ id: 'c1', type: 'button' }];
+      const newTree = [
+        {
+          id: 'c1',
+          type: 'button',
+          position: { x: 0, y: 0, width: 100, height: 40, zIndex: 0 },
+          styles: {},
+          content: { text: '按钮' },
+        },
+      ];
       const dto: UpdateProjectDto = { componentsTree: newTree };
 
       repo.findOne.mockResolvedValue(entity);

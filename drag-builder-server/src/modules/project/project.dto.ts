@@ -12,11 +12,13 @@ import {
   MaxLength,
   IsOptional,
   IsUUID,
-  IsEnum,
-  IsBoolean,
   IsOptional as IsOptionalDecorator,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+// Note: RadioCheckboxOptionDto has been removed.
+// The options field now uses Record<string, unknown>[] to support
+// both legacy {id, label, checked} and antd {value, label} formats.
 
 /**
  * 位置和尺寸 DTO
@@ -115,26 +117,6 @@ export class ComponentStylesDto {
 }
 
 /**
- * 单选/多选选项 DTO
- */
-export class RadioCheckboxOptionDto {
-  @IsString()
-  @IsNotEmpty()
-  id!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  label!: string;
-
-  @IsBoolean()
-  checked!: boolean;
-
-  @IsBoolean()
-  @IsOptionalDecorator()
-  disabled?: boolean;
-}
-
-/**
  * 内容配置 DTO
  */
 export class ComponentContentDto {
@@ -154,11 +136,37 @@ export class ComponentContentDto {
   @IsOptionalDecorator()
   alt?: string;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => RadioCheckboxOptionDto)
+  @IsString()
   @IsOptionalDecorator()
-  options?: RadioCheckboxOptionDto[];
+  title?: string;
+
+  @IsString()
+  @IsOptionalDecorator()
+  message?: string;
+
+  @IsString()
+  @IsOptionalDecorator()
+  description?: string;
+
+  @IsString()
+  @IsOptionalDecorator()
+  content?: string;
+
+  @IsArray()
+  @IsOptionalDecorator()
+  options?: Record<string, unknown>[];
+
+  @IsArray()
+  @IsOptionalDecorator()
+  items?: Record<string, unknown>[];
+
+  @IsArray()
+  @IsOptionalDecorator()
+  columns?: Record<string, unknown>[];
+
+  @IsArray()
+  @IsOptionalDecorator()
+  dataSource?: Record<string, unknown>[];
 }
 
 /**
@@ -191,7 +199,7 @@ export class ComponentNodeDto {
   @IsUUID('4')
   id!: string;
 
-  @IsEnum(['div', 'button', 'text', 'image', 'input', 'radio', 'checkbox', 'tag'])
+  @IsString()
   type!: string;
 
   @ValidateNested()
@@ -210,6 +218,10 @@ export class ComponentNodeDto {
   @IsOptionalDecorator()
   @Type(() => AnimationConfigDto)
   animation?: AnimationConfigDto;
+
+  @IsObject()
+  @IsOptionalDecorator()
+  props?: Record<string, unknown>;
 
   @IsArray()
   @ValidateNested({ each: true })
