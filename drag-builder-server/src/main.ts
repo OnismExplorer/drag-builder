@@ -1,7 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+
+const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,7 +26,23 @@ async function bootstrap() {
       transform: true, // 自动转换类型
       exceptionFactory: errors => {
         // 将 class-validator 错误整理为扁平的消息数组
-        const messages = errors.flatMap(err => Object.values(err.constraints ?? {}));
+        const messages = errors.flatMap(err => {
+          // 提取当前约束错误
+          const constraints = Object.values(err.constraints ?? {});
+          // 提取嵌套子错误（如 ValidateNested 产生的子属性错误）
+          const childErrors =
+            err.children?.flatMap(child => {
+              const extractErrors = (e: typeof err, path: string): string[] => {
+                const curr = Object.values(e.constraints ?? {}).map(msg => `${path}: ${msg}`);
+                const nested =
+                  e.children?.flatMap(c => extractErrors(c, `${path}.${c.property}`)) ?? [];
+                return [...curr, ...nested];
+              };
+              return extractErrors(child, `${err.property}.${child.property}`);
+            }) ?? [];
+          return [...constraints, ...childErrors];
+        });
+        logger.warn(`验证失败: ${messages.join('; ')}`);
         return new BadRequestException({
           statusCode: 400,
           error: 'Validation Failed',

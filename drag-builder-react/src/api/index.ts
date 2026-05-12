@@ -5,9 +5,11 @@
 
 export { default as apiClient } from './client';
 export { createProject, getProjects, getProject, updateProject, deleteProject } from './projectApi';
+export { register, login, getProfile } from './authApi';
 export type {
   CreateProjectPayload,
   UpdateProjectPayload,
   GetProjectsParams,
   ProjectListResponse,
 } from './projectApi';
+export type { RegisterPayload, LoginPayload, LoginResponse } from './authApi';

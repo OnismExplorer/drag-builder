@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { ProjectEntity } from './project.entity';
@@ -8,12 +8,10 @@ import { CreateProjectDto, UpdateProjectDto } from './project.dto';
  * 项目列表查询参数
  */
 export interface FindAllOptions {
-  /** 页码（从 1 开始） */
   page?: number;
-  /** 每页数量 */
   limit?: number;
-  /** 搜索关键词（匹配项目名称） */
   search?: string;
+  userId?: string;
 }
 
 /**
@@ -46,13 +44,14 @@ export class ProjectService {
    * @param createProjectDto 创建项目的数据
    * @returns 创建成功的项目实体
    */
-  async create(createProjectDto: CreateProjectDto): Promise<ProjectEntity> {
+  async create(createProjectDto: CreateProjectDto, userId: string): Promise<ProjectEntity> {
     this.logger.log(`创建项目：${createProjectDto.name}`);
 
     const project = this.projectRepository.create({
       name: createProjectDto.name,
       canvasConfig: createProjectDto.canvasConfig,
       componentsTree: createProjectDto.componentsTree,
+      userId,
     });
 
     const saved = await this.projectRepository.save(project);
@@ -66,11 +65,16 @@ export class ProjectService {
    * @returns 分页后的项目列表
    */
   async findAll(options: FindAllOptions = {}): Promise<PaginatedResult<ProjectEntity>> {
-    const { page = 1, limit = 10, search } = options;
+    const { page = 1, limit = 10, search, userId } = options;
     const skip = (page - 1) * limit;
 
-    // 构建查询条件
-    const where = search ? { name: Like(`%${search}%`) } : {};
+    const where: Record<string, unknown> = {};
+    if (search) {
+      where.name = Like(`%${search}%`);
+    }
+    if (userId) {
+      where.userId = userId;
+    }
 
     const [data, total] = await this.projectRepository.findAndCount({
       where,
@@ -90,7 +94,7 @@ export class ProjectService {
    * @returns 项目实体
    * @throws NotFoundException 项目不存在时抛出 404
    */
-  async findOne(id: string): Promise<ProjectEntity> {
+  async findOne(id: string, userId?: string): Promise<ProjectEntity> {
     const project = await this.projectRepository.findOne({ where: { id } });
 
     if (!project) {
@@ -98,21 +102,20 @@ export class ProjectService {
       throw new NotFoundException(`项目 ${id} 不存在`);
     }
 
+    if (userId && project.userId !== userId) {
+      throw new ForbiddenException('无权访问该项目');
+    }
+
     return project;
   }
 
-  /**
-   * 更新项目
-   * @param id 项目 UUID
-   * @param updateProjectDto 更新数据（部分更新）
-   * @returns 更新后的项目实体
-   * @throws NotFoundException 项目不存在时抛出 404
-   */
-  async update(id: string, updateProjectDto: UpdateProjectDto): Promise<ProjectEntity> {
-    // 先确认项目存在
-    const project = await this.findOne(id);
+  async update(
+    id: string,
+    updateProjectDto: UpdateProjectDto,
+    userId: string
+  ): Promise<ProjectEntity> {
+    const project = await this.findOne(id, userId);
 
-    // 合并更新字段
     if (updateProjectDto.name !== undefined) {
       project.name = updateProjectDto.name;
     }
@@ -128,14 +131,8 @@ export class ProjectService {
     return updated;
   }
 
-  /**
-   * 删除项目
-   * @param id 项目 UUID
-   * @throws NotFoundException 项目不存在时抛出 404
-   */
-  async remove(id: string): Promise<void> {
-    // 先确认项目存在
-    await this.findOne(id);
+  async remove(id: string, userId: string): Promise<void> {
+    await this.findOne(id, userId);
 
     await this.projectRepository.delete(id);
     this.logger.log(`项目删除成功，ID：${id}`);

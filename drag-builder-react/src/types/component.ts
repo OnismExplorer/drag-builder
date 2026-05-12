@@ -93,6 +93,7 @@ export interface ComponentContent {
   items?: TabItem[]; // 标签页选项（antd-tabs）
   columns?: TableColumn[]; // 表格列配置（antd-table）
   dataSource?: Record<string, string>[]; // 表格数据源（antd-table）
+  treeData?: TreeNode[]; // 树形数据（antd-treeselect）
 }
 
 /**
@@ -111,6 +112,15 @@ export interface TableColumn {
   title: string;
   dataIndex: string;
   key: string;
+}
+
+/**
+ * 树形节点（antd-treeselect 用）
+ */
+export interface TreeNode {
+  value: string;
+  title: string;
+  children?: TreeNode[];
 }
 
 /**

@@ -558,9 +558,95 @@ describe('Project DTOs Validation', () => {
           },
           componentsTree: [
             {
-              id: 'test-id',
+              id: '550e8400-e29b-41d4-a716-446655440000',
               type: 'div',
               position: { x: 0, y: 0, width: 100, height: 100, zIndex: 0 },
+              styles: { backgroundColor: '#FFFFFF' },
+              content: {},
+            },
+          ],
+        });
+
+        const errors = await validate(dto);
+        expect(errors.length).toBe(0);
+      });
+
+      it('应该验证通过 - componentsTree 包含 antd 组件（含非标准 content 字段）', async () => {
+        const dto = plainToInstance(CreateProjectDto, {
+          name: '测试项目',
+          canvasConfig: {
+            width: 1440,
+            height: 900,
+            preset: 'desktop',
+            backgroundColor: '#FFFFFF',
+          },
+          componentsTree: [
+            {
+              id: '550e8400-e29b-41d4-a716-446655440001',
+              type: 'antd-button',
+              position: { x: 100, y: 100, width: 120, height: 40, zIndex: 0 },
+              styles: { backgroundColor: '#1677ff', borderRadius: 6 },
+              content: { text: '按钮' },
+              props: { type: 'primary', size: 'middle', disabled: false },
+            },
+          ],
+        });
+
+        const errors = await validate(dto);
+        expect(errors.length).toBe(0);
+      });
+
+      it('应该验证通过 - componentsTree 包含 antd-treeselect（含 treeData 字段）', async () => {
+        const dto = plainToInstance(CreateProjectDto, {
+          name: '测试项目',
+          canvasConfig: {
+            width: 1440,
+            height: 900,
+            preset: 'desktop',
+            backgroundColor: '#FFFFFF',
+          },
+          componentsTree: [
+            {
+              id: '550e8400-e29b-41d4-a716-446655440002',
+              type: 'antd-treeselect',
+              position: { x: 100, y: 100, width: 200, height: 40, zIndex: 0 },
+              styles: { backgroundColor: '#ffffff', borderRadius: 6 },
+              content: {
+                placeholder: '请选择',
+                treeData: [{ value: 'parent1', title: '父节点 1', children: [] }],
+              },
+              props: { disabled: false, multiple: false },
+            },
+          ],
+        });
+
+        const errors = await validate(dto);
+        expect(errors.length).toBe(0);
+      });
+
+      it('应该验证通过 - componentsTree 包含 antd-table（含 columns 和 dataSource）', async () => {
+        const dto = plainToInstance(CreateProjectDto, {
+          name: '测试项目',
+          canvasConfig: {
+            width: 1440,
+            height: 900,
+            preset: 'desktop',
+            backgroundColor: '#FFFFFF',
+          },
+          componentsTree: [
+            {
+              id: '550e8400-e29b-41d4-a716-446655440003',
+              type: 'antd-table',
+              position: { x: 100, y: 100, width: 600, height: 300, zIndex: 0 },
+              styles: { backgroundColor: '#ffffff', borderRadius: 8 },
+              content: {
+                columns: [
+                  { title: '列1', dataIndex: 'col1', key: 'col1' },
+                  { title: '列2', dataIndex: 'col2', key: 'col2' },
+                ],
+                dataSource: [{ key: '1', col1: '数据1', col2: '数据2' }],
+              },
+              props: { bordered: true, size: 'middle' },
             },
           ],
         });

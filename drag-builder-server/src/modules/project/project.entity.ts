@@ -5,7 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { UserEntity } from '../auth/user.entity';
 
 /**
  * 项目实体
@@ -50,6 +53,13 @@ export class ProjectEntity {
    */
   @Column({ type: 'jsonb', nullable: false })
   componentsTree!: unknown[];
+
+  @Column({ type: 'uuid', nullable: true, name: 'user_id' })
+  userId!: string | null;
+
+  @ManyToOne(() => UserEntity, { eager: false })
+  @JoinColumn({ name: 'user_id' })
+  user!: UserEntity;
 
   /**
    * 创建时间

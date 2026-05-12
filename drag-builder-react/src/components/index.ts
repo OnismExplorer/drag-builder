@@ -17,3 +17,6 @@ export type { MaterialConfig } from './MaterialPanel';
 
 // Toast 组件
 export { Toast } from './Toast/Toast';
+
+// AuthGuard 组件
+export { AuthGuard } from './AuthGuard';

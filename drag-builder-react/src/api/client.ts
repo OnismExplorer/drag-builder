@@ -8,6 +8,25 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 import { parseApiError } from './errorHandler';
 
+const TOKEN_KEY = 'drag_builder_token';
+
+function getStoredToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function clearStoredToken() {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem('drag_builder_user');
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * API 错误类
  * 携带用户友好的错误信息，便于调用方处理
@@ -51,8 +70,10 @@ const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // 可在此处添加认证 token 等通用请求头
-    // 例如：config.headers.Authorization = `Bearer ${token}`;
+    const token = getStoredToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error: AxiosError) => {
@@ -77,6 +98,14 @@ apiClient.interceptors.response.use(
   },
   (error: AxiosError) => {
     const timestamp = new Date().toISOString();
+
+    if (error.response?.status === 401) {
+      clearStoredToken();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+
     const { logMessage, userMessage, isSystemError } = parseApiError(error);
 
     // 记录结构化日志

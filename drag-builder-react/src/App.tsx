@@ -4,35 +4,53 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { CanvasSizeModal, Toast } from '@/components';
+import { CanvasSizeModal, Toast, AuthGuard } from '@/components';
 import EditorPage from '@/pages/EditorPage';
 import HomePage from '@/pages/HomePage';
+import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
 import { ResponsiveGuard } from '@/components/ResponsiveGuard/ResponsiveGuard';
 import ErrorBoundary from '@/components/ErrorBoundary/ErrorBoundary';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAuthStore } from '@/store/authStore';
+import { useEffect } from 'react';
 
 /**
  * App 根组件
  * 配置路由系统
  */
 function App() {
-  // 初始化全局 API 错误处理器
   useApiErrorHandler();
+
+  const loadFromStorage = useAuthStore(s => s.loadFromStorage);
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
 
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          {/* 首页路由 */}
-          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-          {/* 编辑器路由 - 需要较大屏幕 */}
+          <Route
+            path="/"
+            element={
+              <AuthGuard>
+                <HomePage />
+              </AuthGuard>
+            }
+          />
+
           <Route
             path="/editor"
             element={
-              <ResponsiveGuard>
-                <EditorPage />
-              </ResponsiveGuard>
+              <AuthGuard>
+                <ResponsiveGuard>
+                  <EditorPage />
+                </ResponsiveGuard>
+              </AuthGuard>
             }
           />
         </Routes>

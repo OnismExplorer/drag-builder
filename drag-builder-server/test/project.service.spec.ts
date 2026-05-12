@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Repository, Like } from 'typeorm';
 import { ProjectService } from '../src/modules/project/project.service';
 import { ProjectEntity } from '../src/modules/project/project.entity';
@@ -21,6 +21,7 @@ function makeProject(overrides: Partial<ProjectEntity> = {}): ProjectEntity {
     backgroundColor: '#FFFFFF',
   };
   entity.componentsTree = overrides.componentsTree ?? [];
+  entity.userId = overrides.userId ?? 'user-uuid-0000';
   entity.createdAt = overrides.createdAt ?? new Date('2024-01-01T00:00:00Z');
   entity.updatedAt = overrides.updatedAt ?? new Date('2024-01-01T00:00:00Z');
   return entity;
@@ -91,12 +92,13 @@ describe('ProjectService', () => {
       repo.create.mockReturnValue(entity);
       repo.save.mockResolvedValue(entity);
 
-      const result = await service.create(dto);
+      const result = await service.create(dto, 'user-uuid-0000');
 
       expect(repo.create).toHaveBeenCalledWith({
         name: dto.name,
         canvasConfig: dto.canvasConfig,
         componentsTree: dto.componentsTree,
+        userId: 'user-uuid-0000',
       });
       expect(repo.save).toHaveBeenCalledWith(entity);
       expect(result).toBe(entity);
@@ -118,10 +120,10 @@ describe('ProjectService', () => {
       repo.create.mockReturnValue(entity);
       repo.save.mockResolvedValue(entity);
 
-      await service.create(dto);
+      await service.create(dto, 'user-uuid-0000');
 
       expect(repo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ componentsTree: components })
+        expect.objectContaining({ componentsTree: components, userId: 'user-uuid-0000' })
       );
     });
 
@@ -138,7 +140,7 @@ describe('ProjectService', () => {
       repo.create.mockReturnValue(entity);
       repo.save.mockResolvedValue(entity);
 
-      await service.create(dto);
+      await service.create(dto, 'user-uuid-0000');
 
       expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ canvasConfig }));
     });
@@ -150,7 +152,7 @@ describe('ProjectService', () => {
       repo.create.mockReturnValue(entity);
       repo.save.mockRejectedValue(new Error('数据库连接失败'));
 
-      await expect(service.create(dto)).rejects.toThrow('数据库连接失败');
+      await expect(service.create(dto, 'user-uuid-0000')).rejects.toThrow('数据库连接失败');
     });
   });
 
@@ -271,7 +273,7 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.save.mockResolvedValue(updated);
 
-      const result = await service.update(entity.id, dto);
+      const result = await service.update(entity.id, dto, 'user-uuid-0000');
 
       expect(repo.save).toHaveBeenCalled();
       expect(result).toBe(updated);
@@ -284,10 +286,9 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.save.mockImplementation(async e => e as ProjectEntity);
 
-      const result = await service.update(entity.id, dto);
+      const result = await service.update(entity.id, dto, 'user-uuid-0000');
 
       expect(result.name).toBe('新名称');
-      // canvasConfig 和 componentsTree 保持不变
       expect(result.canvasConfig).toEqual(entity.canvasConfig);
       expect(result.componentsTree).toEqual(entity.componentsTree);
     });
@@ -305,7 +306,7 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.save.mockImplementation(async e => e as ProjectEntity);
 
-      const result = await service.update(entity.id, dto);
+      const result = await service.update(entity.id, dto, 'user-uuid-0000');
 
       expect(result.canvasConfig).toEqual(newConfig);
       expect(result.name).toBe(entity.name);
@@ -327,7 +328,7 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.save.mockImplementation(async e => e as ProjectEntity);
 
-      const result = await service.update(entity.id, dto);
+      const result = await service.update(entity.id, dto, 'user-uuid-0000');
 
       expect(result.componentsTree).toEqual(newTree);
     });
@@ -335,8 +336,17 @@ describe('ProjectService', () => {
     it('应该在项目不存在时抛出 NotFoundException（404）', async () => {
       repo.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent-id', { name: '新名称' })).rejects.toThrow(
-        NotFoundException
+      await expect(
+        service.update('non-existent-id', { name: '新名称' }, 'user-uuid-0000')
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('应该在项目不属于当前用户时抛出 ForbiddenException', async () => {
+      const entity = makeProject({ userId: 'other-user-id' });
+      repo.findOne.mockResolvedValue(entity);
+
+      await expect(service.update(entity.id, { name: '新名称' }, 'user-uuid-0000')).rejects.toThrow(
+        ForbiddenException
       );
     });
 
@@ -347,7 +357,7 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.save.mockImplementation(async e => e as ProjectEntity);
 
-      const result = await service.update(entity.id, dto);
+      const result = await service.update(entity.id, dto, 'user-uuid-0000');
 
       expect(result.name).toBe(entity.name);
       expect(result.canvasConfig).toEqual(entity.canvasConfig);
@@ -364,20 +374,24 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.delete.mockResolvedValue({ affected: 1, raw: [] });
 
-      await expect(service.remove(entity.id)).resolves.toBeUndefined();
+      await expect(service.remove(entity.id, 'user-uuid-0000')).resolves.toBeUndefined();
       expect(repo.delete).toHaveBeenCalledWith(entity.id);
     });
 
     it('应该在项目不存在时抛出 NotFoundException（404）', async () => {
       repo.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('non-existent-id', 'user-uuid-0000')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('删除不存在的项目时不应调用 repository.delete', async () => {
       repo.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('non-existent-id', 'user-uuid-0000')).rejects.toThrow(
+        NotFoundException
+      );
       expect(repo.delete).not.toHaveBeenCalled();
     });
 
@@ -387,9 +401,16 @@ describe('ProjectService', () => {
       repo.findOne.mockResolvedValue(entity);
       repo.delete.mockResolvedValue({ affected: 1, raw: [] });
 
-      await service.remove(targetId);
+      await service.remove(targetId, 'user-uuid-0000');
 
       expect(repo.delete).toHaveBeenCalledWith(targetId);
+    });
+
+    it('应该在项目不属于当前用户时抛出 ForbiddenException', async () => {
+      const entity = makeProject({ userId: 'other-user-id' });
+      repo.findOne.mockResolvedValue(entity);
+
+      await expect(service.remove(entity.id, 'user-uuid-0000')).rejects.toThrow(ForbiddenException);
     });
   });
 });

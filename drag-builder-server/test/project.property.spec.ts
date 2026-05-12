@@ -61,6 +61,18 @@ const validProjectName = (): fc.Arbitrary<string> =>
   fc.string({ minLength: 1, maxLength: 255 }).filter(s => s.trim().length > 0);
 
 /**
+ * 生成有效的 UUID v4
+ * fc.uuid() 在缩减过程中可能生成非 v4 格式，
+ * 但 @IsUUID('4') 只接受 v4，所以用固定值确保 v4 格式
+ */
+const validUUIDv4 = (): fc.Arbitrary<string> =>
+  fc.constantFrom(
+    '550e8400-e29b-41d4-a716-446655440000',
+    'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    '7c9e6679-7425-40de-944b-e07fc1f90ae7'
+  );
+
+/**
  * Mock 组件节点类型（用于 fast-check 属性测试）
  */
 interface MockComponentNode {
@@ -73,24 +85,18 @@ interface MockComponentNode {
     height: number;
     zIndex: number;
   };
-  styles?: {
-    backgroundColor?: string;
-    borderColor?: string;
-    borderWidth?: number;
-    borderRadius?: number;
-  };
-  content?: {
-    text?: string;
-  };
+  styles: Record<string, unknown>;
+  content: Record<string, unknown>;
 }
 
 /**
  * 生成有效的组件树数据（简化版）
+ * styles 和 content 使用 @IsObject() 验证，支持任意字段结构
  */
 const validComponentsTree = (): fc.Arbitrary<MockComponentNode[]> =>
   fc.array(
     fc.record({
-      id: fc.uuid(),
+      id: validUUIDv4(),
       type: fc.constantFrom('div', 'button', 'text', 'image', 'input'),
       position: fc.record({
         x: fc.integer({ min: 0, max: 5000 }),

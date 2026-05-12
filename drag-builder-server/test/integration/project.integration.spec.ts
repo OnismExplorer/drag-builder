@@ -6,6 +6,7 @@ import request from 'supertest';
 import { ProjectModule } from '../../src/modules/project/project.module';
 import { ProjectEntity } from '../../src/modules/project/project.entity';
 import { Repository } from 'typeorm';
+import { JwtAuthGuard } from '../../src/modules/auth/jwt-auth.guard';
 
 /**
  * 项目 API 集成测试
@@ -40,6 +41,7 @@ describe('Project API 集成测试', () => {
       backgroundColor: '#FFFFFF',
     };
     entity.componentsTree = overrides.componentsTree ?? [];
+    entity.userId = overrides.userId ?? 'test-user-id';
     entity.createdAt = overrides.createdAt ?? new Date('2024-01-01T00:00:00Z');
     entity.updatedAt = overrides.updatedAt ?? new Date('2024-01-01T00:00:00Z');
     return entity;
@@ -72,6 +74,14 @@ describe('Project API 集成测试', () => {
     })
       .overrideProvider(getRepositoryToken(ProjectEntity))
       .useValue(mockRepo)
+      .overrideGuard(JwtAuthGuard)
+      .useValue({
+        canActivate: (context: any) => {
+          const req = context.switchToHttp().getRequest();
+          req.user = { userId: 'test-user-id', username: 'testuser' };
+          return true;
+        },
+      })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -282,7 +292,13 @@ describe('Project API 集成测试', () => {
 
     it('响应体应包含 canvasConfig 和 componentsTree', async () => {
       const entity = makeEntity({
-        componentsTree: [{ id: 'c1', type: 'button' }],
+        componentsTree: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            type: 'button',
+            position: { x: 0, y: 0, width: 120, height: 40, zIndex: 0 },
+          },
+        ],
       });
       (mockRepo.findOne as jest.Mock).mockResolvedValue(entity);
 
@@ -329,7 +345,13 @@ describe('Project API 集成测试', () => {
 
     it('应该支持仅更新 componentsTree', async () => {
       const original = makeEntity();
-      const newTree = [{ id: 'c1', type: 'text' }];
+      const newTree = [
+        {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          type: 'text',
+          position: { x: 0, y: 0, width: 100, height: 24, zIndex: 0 },
+        },
+      ];
       const updated = makeEntity({ componentsTree: newTree });
 
       (mockRepo.findOne as jest.Mock).mockResolvedValue(original);

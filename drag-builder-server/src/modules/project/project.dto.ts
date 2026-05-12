@@ -16,9 +16,9 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-// Note: RadioCheckboxOptionDto has been removed.
-// The options field now uses Record<string, unknown>[] to support
-// both legacy {id, label, checked} and antd {value, label} formats.
+// Note: ComponentStylesDto 和 ComponentContentDto 保留作为文档参考，
+// 组件节点的 styles 和 content 字段已改为 @IsObject() 灵活验证，
+// 以支持不同组件类型（antd 等）的扩展内容和样式字段。
 
 /**
  * 位置和尺寸 DTO
@@ -193,6 +193,11 @@ export class AnimationConfigDto {
 /**
  * 组件节点 DTO
  * 验证画布上的组件节点数据结构
+ *
+ * 注意：content 和 styles 使用 @IsObject() 而非 @ValidateNested()，
+ * 原因是不同组件类型（antd、自定义组件等）的内容和样式字段各不相同，
+ * 使用严格嵌套验证会导致新增组件类型时必须同步修改白名单，
+ * 前端已负责内容结构的正确性，后端只需确保类型安全。
  */
 export class ComponentNodeDto {
   @IsString()
@@ -206,13 +211,13 @@ export class ComponentNodeDto {
   @Type(() => PositionDto)
   position!: PositionDto;
 
-  @ValidateNested()
-  @Type(() => ComponentStylesDto)
-  styles!: ComponentStylesDto;
+  @IsObject()
+  @IsOptionalDecorator()
+  styles?: Record<string, unknown>;
 
-  @ValidateNested()
-  @Type(() => ComponentContentDto)
-  content!: ComponentContentDto;
+  @IsObject()
+  @IsOptionalDecorator()
+  content?: Record<string, unknown>;
 
   @ValidateNested()
   @IsOptionalDecorator()

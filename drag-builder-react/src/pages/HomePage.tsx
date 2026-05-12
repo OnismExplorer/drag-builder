@@ -1,12 +1,23 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Code2, Layers, Sparkles, Zap } from 'lucide-react';
 import { useUIStore } from '@store/uiStore';
+import { useAuthStore } from '@store/authStore';
 import { FeatureCard } from '@components/FeatureCard';
 import { PixelSnow } from '@components/PixelSnow';
 import ProjectList from '@components/ProjectList/ProjectList';
 
 export default function HomePage() {
   const { openCanvasSizeModal } = useUIStore();
+  const user = useAuthStore(s => s.user);
+  const logout = useAuthStore(s => s.logout);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  const displayName = user?.displayName || user?.username || user?.email || '用户';
 
   return (
     <div className="min-h-screen bg-black">
@@ -59,6 +70,15 @@ export default function HomePage() {
               >
                 创建新项目
               </button>
+              <div className="flex items-center gap-3 ml-2 pl-4 border-l border-white/10">
+                <span className="text-sm text-slate-300">{displayName}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white border border-white/10 rounded-lg hover:border-white/20 transition-colors"
+                >
+                  登出
+                </button>
+              </div>
             </nav>
           </div>
         </header>

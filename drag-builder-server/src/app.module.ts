@@ -5,7 +5,9 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProjectModule } from './modules/project';
 import { HealthModule } from './modules/health/health.module';
+import { AuthModule } from './modules/auth';
 import databaseConfig from './config/database.config';
+import jwtConfig from './config/jwt.config';
 
 /**
  * 应用根模块
@@ -16,7 +18,7 @@ import databaseConfig from './config/database.config';
     // 加载 .env 文件中的环境变量，设置为全局可用
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig], // 加载配置文件
+      load: [databaseConfig, jwtConfig],
       envFilePath: '.env',
     }),
 
@@ -28,11 +30,11 @@ import databaseConfig from './config/database.config';
         configService.getOrThrow<TypeOrmModuleOptions>('database'), // 获取刚才注册的 'database' 配置
     }),
 
-    // 注册项目模块
     ProjectModule,
 
-    // 注册健康检查模块
     HealthModule,
+
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
