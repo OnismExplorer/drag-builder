@@ -14,7 +14,7 @@ import { CodePreview } from '@components/CodePreview/CodePreview';
 import { useComponentStore } from '@store';
 import { useCanvasStore } from '@store';
 import { useUIStore } from '@store';
-import { createDefaultComponent } from '@components';
+import { componentRegistry } from '@/store/componentRegistry';
 import { SnappingEngine } from '@utils';
 import { createVirtualGroupComponent } from '@utils/multiSelectBounds';
 import { throttle } from '@utils/timing';
@@ -375,14 +375,16 @@ const EditorPage: React.FC = () => {
         const canvasY = (dropY - canvasRect.top) / zoom;
 
         // 先创建临时组件以获取其尺寸
-        const tempComponent = createDefaultComponent(componentType, { x: 0, y: 0 });
+        const tempComponent = componentRegistry.createDefault(componentType, { x: 0, y: 0 });
 
-        // 计算组件中心对齐鼠标位置的坐标（减去宽高的一半）
+        if (!tempComponent) return;
+
         const x = Math.max(0, canvasX - tempComponent.position.width / 2);
         const y = Math.max(0, canvasY - tempComponent.position.height / 2);
 
-        // 创建新组件（使用调整后的位置）
-        const newComponent = createDefaultComponent(componentType, { x, y });
+        const newComponent = componentRegistry.createDefault(componentType, { x, y });
+
+        if (!newComponent) return;
 
         // 添加到画布
         addComponent(newComponent);
