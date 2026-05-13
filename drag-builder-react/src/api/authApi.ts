@@ -33,3 +33,8 @@ export async function getProfile(): Promise<UserInfo> {
   const response = await apiClient.get<UserInfo>('/auth/profile');
   return response.data;
 }
+
+export async function githubExchange(code: string): Promise<LoginResponse> {
+  const response = await apiClient.post<LoginResponse>('/auth/github/exchange', { code });
+  return response.data;
+}

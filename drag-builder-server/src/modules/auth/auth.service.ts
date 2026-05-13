@@ -12,6 +12,8 @@ import * as bcrypt from 'bcrypt';
 import { UserEntity } from './user.entity';
 import { RegisterDto, validateAtLeastOneIdentify } from './register.dto';
 import { LoginDto, validateLoginAtLeastOneIdentify } from './login.dto';
+import { RegisterWithCodeDto } from './dtos/register-with-code.dto';
+import { GithubService } from './github.service';
 
 export interface JwtPayload {
   sub: string;
@@ -36,7 +38,8 @@ export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly githubService: GithubService
   ) {}
 
   async register(dto: RegisterDto): Promise<Omit<UserEntity, 'passwordHash'>> {
@@ -120,5 +123,71 @@ export class AuthService {
     }
 
     return stripPasswordHash(user);
+  }
+
+  async registerWithEmailCode(dto: RegisterWithCodeDto): Promise<Omit<UserEntity, 'passwordHash'>> {
+    const existing = await this.userRepository.findOne({ where: { email: dto.email } });
+    if (existing) {
+      throw new ConflictException('该邮箱已被注册');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(dto.password, salt);
+
+    const user = this.userRepository.create({
+      username: dto.username ?? null,
+      email: dto.email,
+      passwordHash,
+      displayName: dto.displayName ?? dto.username ?? dto.email ?? null,
+    });
+
+    const saved = await this.userRepository.save(user);
+    this.logger.log(`邮箱验证码注册成功，ID：${saved.id}`);
+    return stripPasswordHash(saved);
+  }
+
+  async handleGithubCallback(code: string): Promise<Omit<UserEntity, 'passwordHash'>> {
+    const accessToken = await this.githubService.exchangeCodeForToken(code);
+    const githubUser = await this.githubService.getUserInfo(accessToken);
+
+    // 1. 通过 githubId 查找
+    let user = await this.userRepository.findOne({ where: { githubId: String(githubUser.id) } });
+    if (user) {
+      this.logger.log(`GitHub 用户登录，ID：${user.id}`);
+      return stripPasswordHash(user);
+    }
+
+    // 2. 通过 email 查找
+    if (githubUser.email) {
+      user = await this.userRepository.findOne({ where: { email: githubUser.email } });
+      if (user) {
+        user.githubId = String(githubUser.id);
+        await this.userRepository.save(user);
+        this.logger.log(`GitHub 用户绑定已有账号，ID：${user.id}`);
+        return stripPasswordHash(user);
+      }
+    }
+
+    // 3. 创建新用户
+    const salt = await bcrypt.genSalt(10);
+    const randomPassword =
+      Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+    const passwordHash = await bcrypt.hash(randomPassword, salt);
+
+    const newUser = this.userRepository.create({
+      username: null,
+      email: githubUser.email,
+      githubId: String(githubUser.id),
+      passwordHash,
+      displayName: githubUser.name || githubUser.login,
+    });
+
+    const saved = await this.userRepository.save(newUser);
+    this.logger.log(`GitHub 新用户创建，ID：${saved.id}`);
+    return stripPasswordHash(saved);
+  }
+
+  generateAccessToken(payload: JwtPayload): string {
+    return this.jwtService.sign(payload);
   }
 }

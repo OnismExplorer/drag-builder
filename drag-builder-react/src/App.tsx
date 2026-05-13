@@ -9,11 +9,10 @@ import EditorPage from '@/pages/EditorPage';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
+import GithubCallbackPage from '@/pages/GithubCallbackPage';
 import { ResponsiveGuard } from '@/components/ResponsiveGuard/ResponsiveGuard';
 import ErrorBoundary from '@/components/ErrorBoundary/ErrorBoundary';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import { useAuthStore } from '@/store/authStore';
-import { useEffect } from 'react';
 
 /**
  * App 根组件
@@ -21,11 +20,8 @@ import { useEffect } from 'react';
  */
 function App() {
   useApiErrorHandler();
-
-  const loadFromStorage = useAuthStore(s => s.loadFromStorage);
-  useEffect(() => {
-    loadFromStorage();
-  }, [loadFromStorage]);
+  // 不再需要 useEffect(() => loadFromStorage(), [loadFromStorage]);
+  // 因为状态已在 useAuthStore 初始化时同步恢复
 
   return (
     <ErrorBoundary>
@@ -33,6 +29,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/github/callback" element={<GithubCallbackPage />} />
 
           <Route
             path="/"

@@ -8,6 +8,7 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
+import githubConfig from './config/github.config';
 
 /**
  * 应用根模块
@@ -18,7 +19,7 @@ import jwtConfig from './config/jwt.config';
     // 加载 .env 文件中的环境变量，设置为全局可用
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig],
+      load: [databaseConfig, jwtConfig, githubConfig],
       envFilePath: '.env',
     }),
 

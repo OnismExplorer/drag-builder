@@ -3,9 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { UserEntity } from './user.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { EmailCodeService } from './email-code.service';
+import { GithubService } from './github.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -23,9 +26,10 @@ import { JwtAuthGuard } from './jwt-auth.guard';
         },
       }),
     }),
+    HttpModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard, JwtModule],
+  providers: [EmailCodeService, GithubService, AuthService, JwtStrategy, JwtAuthGuard],
+  exports: [AuthService, EmailCodeService, GithubService, JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

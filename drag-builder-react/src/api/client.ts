@@ -7,6 +7,7 @@
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 import { parseApiError } from './errorHandler';
+import { useUIStore } from '@/store/uiStore';
 
 const TOKEN_KEY = 'drag_builder_token';
 
@@ -102,7 +103,16 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       clearStoredToken();
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        // 显示 Toast 提示
+        try {
+          useUIStore.getState().showToast('登录已过期，请重新登录', 'error', 'top-right');
+        } catch {
+          // ignore if store not available
+        }
+        // 延迟跳转让 Toast 显示
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
       }
     }
 

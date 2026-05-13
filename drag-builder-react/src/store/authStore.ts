@@ -4,6 +4,28 @@ import { immer } from 'zustand/middleware/immer';
 const TOKEN_KEY = 'drag_builder_token';
 const USER_KEY = 'drag_builder_user';
 
+// 同步从 localStorage 恢复状态（模块加载时执行）
+function loadToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function loadUser(): UserInfo | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as UserInfo) : null;
+  } catch {
+    return null;
+  }
+}
+
+// 初始化时同步恢复
+const initialToken = loadToken();
+const initialUser = loadUser();
+
 export interface UserInfo {
   id: string;
   username: string | null;
@@ -21,23 +43,6 @@ interface AuthStore {
   setAuth: (token: string, user: UserInfo) => void;
   logout: () => void;
   loadFromStorage: () => void;
-}
-
-function loadToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function loadUser(): UserInfo | null {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as UserInfo) : null;
-  } catch {
-    return null;
-  }
 }
 
 function persistAuth(token: string, user: UserInfo) {
@@ -60,9 +65,10 @@ function clearAuth() {
 
 export const useAuthStore = create<AuthStore>()(
   immer(set => ({
-    token: null,
-    user: null,
-    isAuthenticated: false,
+    // 初始化时同步恢复登录状态（关键修复）
+    token: initialToken,
+    user: initialUser,
+    isAuthenticated: !!(initialToken && initialUser),
 
     setAuth: (token: string, user: UserInfo) => {
       persistAuth(token, user);
