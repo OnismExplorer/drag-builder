@@ -26,6 +26,9 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 255, nullable: true, name: 'display_name' })
   displayName!: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'github_id' })
+  githubId!: string | null;
+
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
