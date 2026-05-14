@@ -153,6 +153,18 @@ export class AuthService {
     // 1. 通过 githubId 查找
     let user = await this.userRepository.findOne({ where: { githubId: String(githubUser.id) } });
     if (user) {
+      let needSave = false;
+      if (!user.username) {
+        user.username = await this.resolveUniqueUsername(githubUser.login);
+        needSave = true;
+      }
+      if (!user.email && githubUser.email) {
+        user.email = githubUser.email;
+        needSave = true;
+      }
+      if (needSave) {
+        await this.userRepository.save(user);
+      }
       this.logger.log(`GitHub 用户登录，ID：${user.id}`);
       return stripPasswordHash(user);
     }
@@ -162,6 +174,9 @@ export class AuthService {
       user = await this.userRepository.findOne({ where: { email: githubUser.email } });
       if (user) {
         user.githubId = String(githubUser.id);
+        if (!user.username) {
+          user.username = await this.resolveUniqueUsername(githubUser.login);
+        }
         await this.userRepository.save(user);
         this.logger.log(`GitHub 用户绑定已有账号，ID：${user.id}`);
         return stripPasswordHash(user);
