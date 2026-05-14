@@ -174,8 +174,10 @@ export class AuthService {
       Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
     const passwordHash = await bcrypt.hash(randomPassword, salt);
 
+    const username = await this.resolveUniqueUsername(githubUser.login);
+
     const newUser = this.userRepository.create({
-      username: null,
+      username,
       email: githubUser.email,
       githubId: String(githubUser.id),
       passwordHash,
@@ -185,6 +187,16 @@ export class AuthService {
     const saved = await this.userRepository.save(newUser);
     this.logger.log(`GitHub 新用户创建，ID：${saved.id}`);
     return stripPasswordHash(saved);
+  }
+
+  private async resolveUniqueUsername(base: string): Promise<string> {
+    let candidate = base;
+    let suffix = 1;
+    while (await this.userRepository.findOne({ where: { username: candidate } })) {
+      suffix++;
+      candidate = `${base}${suffix - 1}`;
+    }
+    return candidate;
   }
 
   generateAccessToken(payload: JwtPayload): string {
