@@ -208,6 +208,54 @@ npm run dev
 4. 点击画布上的组件，在右侧属性面板调整属性
 5. 点击工具栏「保存」按钮持久化项目
 
+## 配置说明
+
+### 环境变量
+
+后端 (`drag-builder-server/.env`)：
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `DB_HOST` | PostgreSQL 主机 | `localhost` |
+| `DB_PORT` | PostgreSQL 端口 | `5432` |
+| `DB_USERNAME` | 数据库用户名 | `onism` |
+| `DB_PASSWORD` | 数据库密码 | `123456` |
+| `DB_DATABASE` | 数据库名称 | `dragbuilder` |
+| `PORT` | 服务端口 | `3000` |
+| `CORS_ORIGIN` | CORS 允许的前端地址 | `http://localhost:5173` |
+| `JWT_SECRET` | JWT 签名密钥 | `your-secret-key` |
+| `GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | `Iv1.xxxxx` |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | `xxxxxxxx` |
+| `GITHUB_CALLBACK_URL` | GitHub 回调地址 | `http://localhost:3000/auth/github/callback` |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile Secret Key | `0xxxxxxxxx` |
+
+前端 (`drag-builder-react/.env`)：
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `VITE_API_URL` | 后端 API 地址 | `http://localhost:3000` |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile Site Key | `0xxxxxxx` |
+
+### 第三方服务配置
+
+#### GitHub OAuth
+
+1. 进入 GitHub **Settings → Developer settings → OAuth Apps**
+2. 点击 **New OAuth App**
+3. 填写配置：
+   - **Application name**: `DragBuilder Dev`
+   - **Homepage URL**: `http://localhost:5173`
+   - **Authorization callback URL**: `http://localhost:3000/auth/github/callback`
+4. 创建后获取 **Client ID** 和 **Client Secret**
+5. 填入后端 `.env` 文件
+
+#### Cloudflare Turnstile（人机验证）
+
+1. 访问 [Cloudflare Turnstile](https://dash.cloudflare.com/turnstile) 管理后台
+2. 点击 **Add a site** 添加新网站
+3. 获取 **Site Key**（前端用）和 **Secret Key**（后端用）
+4. 分别填入前端 `.env` 和后端 `.env`
+
 ## API 文档
 
 基础 URL：`http://localhost:3000`（无全局路径前缀）
