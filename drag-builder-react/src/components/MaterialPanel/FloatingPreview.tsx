@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as LucideReact from 'lucide-react';
 import type { MaterialConfig } from '@store/componentRegistry';
 import { isAntdIcon, getAntdIconSync } from '@components/adapters/antd/shared/iconMap';
 
@@ -133,6 +134,32 @@ const getMediumComponentIcon = (type: string) => {
 };
 
 /**
+ * antd 图标名到 Lucide 图标名的映射（作为 fallback）
+ */
+const ANTD_ICON_TO_LUCIDE: Record<string, string> = {
+  'antd:PlusCircle': 'PlusCircle',
+  'antd:Edit': 'Edit',
+  'antd:Calendar': 'Calendar',
+  'antd:Select': 'CheckSquare',
+  'antd:Table': 'Layout',
+  'antd:Windows': 'Square',
+  'antd:Number': 'Hash',
+  'antd:Switcher': 'ToggleRight',
+  'antd:CheckSquare': 'CheckSquare',
+  'antd:CheckCircle': 'CheckCircle',
+  'antd:Sliders': 'Sliders',
+  'antd:Cluster': 'GitBranch',
+  'antd:NodeIndex': 'GitBranch',
+  'antd:CreditCard': 'CreditCard',
+  'antd:User': 'User',
+  'antd:Crown': 'Award',
+  'antd:Tag': 'Tag',
+  'antd:Sync': 'RefreshCw',
+  'antd:Alert': 'AlertCircle',
+  'antd:FolderOpen': 'FolderOpen',
+};
+
+/**
  * 获取预览图标（支持 antd 图标和内置 SVG fallback）
  */
 const getPreviewIcon = (config: MaterialConfig): React.ReactNode => {
@@ -140,6 +167,14 @@ const getPreviewIcon = (config: MaterialConfig): React.ReactNode => {
     const IconComponent = getAntdIconSync(config.icon);
     if (IconComponent) {
       return <IconComponent style={{ fontSize: 40 }} />;
+    }
+    // antd 图标不在预定义 map 中，尝试映射到 Lucide fallback
+    const lucideName = ANTD_ICON_TO_LUCIDE[config.icon];
+    if (lucideName) {
+      const LucideIcon = LucideReact[lucideName as keyof typeof LucideReact];
+      if (LucideIcon) {
+        return <LucideIcon size={40} />;
+      }
     }
   }
   return getMediumComponentIcon(config.type);
