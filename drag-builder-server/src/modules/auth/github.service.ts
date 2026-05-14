@@ -22,6 +22,7 @@ export class GithubService {
   private readonly githubAuthorizeUrl = 'https://github.com/login/oauth/authorize';
   private readonly githubTokenUrl = 'https://github.com/login/oauth/access_token';
   private readonly githubApiUrl = 'https://api.github.com';
+  private readonly timeout = 30000; // 30 秒超时
 
   constructor(
     private readonly httpService: HttpService,
@@ -60,7 +61,7 @@ export class GithubService {
         code,
         redirect_uri: callbackUrl,
       }),
-      { headers: { Accept: 'application/json' } }
+      { headers: { Accept: 'application/json' }, timeout: this.timeout }
     );
 
     if (response.data.error) {
@@ -78,6 +79,7 @@ export class GithubService {
 
     const userResponse = await this.httpService.axiosRef.get(`${this.githubApiUrl}/user`, {
       headers,
+      timeout: this.timeout,
     });
 
     const user: GithubUser = userResponse.data;
@@ -88,6 +90,7 @@ export class GithubService {
           `${this.githubApiUrl}/user/emails`,
           {
             headers,
+            timeout: this.timeout,
           }
         );
 
