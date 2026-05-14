@@ -175,7 +175,7 @@ export default function ProjectList() {
         importComponents(fullProject.componentsTree);
 
         showToast(`已加载项目「${fullProject.name}」`, 'success');
-        navigate('/editor');
+        navigate(`/editor/${project.id}`);
       } catch {
         showToast('加载项目失败，请重试', 'error');
       } finally {

@@ -24,6 +24,8 @@ import ZoomControl from './ZoomControl';
  */
 interface ToolbarProps {
   projectName?: string; // 项目名称（可选）
+  onSave?: () => void; // 保存回调
+  isSaving?: boolean; // 保存中状态
 }
 
 /**
@@ -31,25 +33,37 @@ interface ToolbarProps {
  * 固定在顶部，高度 64px
  * 使用 Linear/Vercel 风格
  */
-const Toolbar: React.FC<ToolbarProps> = ({ projectName = '未命名项目' }) => {
+const Toolbar: React.FC<ToolbarProps> = ({
+  projectName = '未命名项目',
+  onSave,
+  isSaving: externalIsSaving,
+}) => {
   const { openCodePreview, isGridSnapEnabled, toggleGridSnap, showToast } = useUIStore();
   const { config: canvasConfig } = useCanvasStore();
   const { components } = useComponentStore();
 
   // 本地保存加载状态（独立于全局 isLoading，避免影响其他加载场景）
-  const [isSaving, setIsSaving] = useState(false);
+  // 如果外部传入 isSaving，优先使用外部状态
+  const [internalIsSaving, setInternalIsSaving] = useState(false);
+  const isSaving = externalIsSaving !== undefined ? externalIsSaving : internalIsSaving;
 
   /**
    * 处理保存按钮点击（需求 10.2, 10.4, 10.5, 14.5）
    * 1. 设置加载状态
-   * 2. 调用 createProject API
+   * 2. 调用 onSave 回调或 createProject API
    * 3. 成功显示绿色 Toast，失败显示红色 Toast
    */
   const handleSave = async () => {
-    // 防止重复点击
-    if (isSaving) return;
+    // 如果有外部回调，直接调用
+    if (onSave) {
+      onSave();
+      return;
+    }
 
-    setIsSaving(true);
+    // 防止重复点击
+    if (internalIsSaving) return;
+
+    setInternalIsSaving(true);
     try {
       // 调用后端 API 创建项目（需求 10.2）
       await createProject({
@@ -73,7 +87,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ projectName = '未命名项目' }) =>
       showToast(`保存失败：${errorMsg}`, 'error');
     } finally {
       // 无论成功或失败，都关闭加载状态
-      setIsSaving(false);
+      setInternalIsSaving(false);
     }
   };
 

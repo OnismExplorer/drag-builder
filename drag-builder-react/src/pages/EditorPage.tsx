@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import { Canvas } from '@components/Canvas';
@@ -19,7 +20,7 @@ import { SnappingEngine } from '@utils';
 import { createVirtualGroupComponent } from '@utils/multiSelectBounds';
 import { throttle } from '@utils/timing';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
-import { createProject } from '@api';
+import { createProject, updateProject } from '@api';
 import type { ComponentType, ComponentNode } from '@/types';
 
 /**
@@ -46,6 +47,8 @@ class SmartPointerSensor extends PointerSensor {
  * 使用完整视口布局
  */
 const EditorPage: React.FC = () => {
+  const { projectId } = useParams<{ projectId?: string }>();
+
   const { components, addComponent, updateComponent, selectedIds, pushHistory } =
     useComponentStore();
   const { zoom, config } = useCanvasStore();
@@ -65,17 +68,28 @@ const EditorPage: React.FC = () => {
 
   /**
    * 保存项目（Ctrl+S 和自动保存共用）
+   * 有 projectId 时更新现有项目，无 projectId 时创建新项目
    */
   const isSavingRef = useRef(false);
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     try {
-      await createProject({
-        name: projectName,
-        canvasConfig: config,
-        componentsTree: components,
-      });
+      if (projectId) {
+        // 更新现有项目
+        await updateProject(projectId, {
+          name: projectName,
+          canvasConfig: config,
+          componentsTree: components,
+        });
+      } else {
+        // 创建新项目
+        await createProject({
+          name: projectName,
+          canvasConfig: config,
+          componentsTree: components,
+        });
+      }
       showToast('保存成功', 'success');
     } catch (error) {
       // 记录错误详情，便于调试
@@ -85,7 +99,7 @@ const EditorPage: React.FC = () => {
     } finally {
       isSavingRef.current = false;
     }
-  }, [components, config, showToast, projectName]);
+  }, [components, config, showToast, projectName, projectId]);
 
   /**
    * 注册键盘快捷键（Delete、Ctrl+Z/Y、Ctrl+C/V、Ctrl+S）
@@ -500,7 +514,7 @@ const EditorPage: React.FC = () => {
     >
       <div className="h-screen w-screen overflow-hidden bg-slate-50">
         {/* 顶部工具栏 */}
-        <Toolbar projectName="未命名项目" />
+        <Toolbar projectName="未命名项目" onSave={handleSave} isSaving={isSavingRef.current} />
 
         {/* 主编辑区域 - 顶部留出 Toolbar 的空间 */}
         <div className="h-[calc(100vh-4rem)] mt-16">
