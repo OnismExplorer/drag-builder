@@ -9,9 +9,9 @@ import {
   UseGuards,
   Req,
   ConflictException,
-  TooManyRequestsException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { ThrottlerException } from '@nestjs/throttler';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { EmailCodeService } from './email-code.service';
@@ -40,7 +40,7 @@ export class AuthController {
   async sendCode(@Body() dto: SendCodeDto, @Ip() ip: string) {
     const canSend = await this.emailCodeService.canSendFromIp(ip);
     if (!canSend) {
-      throw new TooManyRequestsException('发送次数超限，请明天再试');
+      throw new ThrottlerException('发送次数超限，请明天再试');
     }
 
     const turnstileValid = await this.emailCodeService.verifyTurnstile(dto.turnstileToken);
