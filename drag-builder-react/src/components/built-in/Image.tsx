@@ -5,6 +5,7 @@
 import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
 import { getSafeImageUrl } from '@utils/sanitization';
+import { escapeHtml } from '@utils/escapeHtml';
 
 /**
  * Image 图片组件定义
@@ -83,8 +84,8 @@ export const imageDefinition: ComponentDefinition = {
   codeGen: {
     imports: [],
     generateJSX: (component, style) => {
-      const src = String(component.content.src || '/placeholder.png');
-      const alt = String(component.content.alt || '');
+      const src = escapeHtml(String(component.content.src || '/placeholder.png'));
+      const alt = escapeHtml(String(component.content.alt || ''));
       return `<img src="${src}" alt="${alt}" className="w-full h-full" style={{ ...${style}, objectFit: 'cover' }} />`;
     },
   },

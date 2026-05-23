@@ -4,6 +4,7 @@
 
 import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
+import { escapeHtml } from '@utils/escapeHtml';
 
 /**
  * Tag 标签组件定义
@@ -123,7 +124,7 @@ export const tagDefinition: ComponentDefinition = {
     imports: [],
     generateJSX: (component, style, className) => {
       const cn = className ?? '';
-      const text = String(component.content.text || '标签');
+      const text = escapeHtml(String(component.content.text || '标签'));
       return `<span className="${cn}" style={${style}}>${text}</span>`;
     },
   },

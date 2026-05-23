@@ -10,6 +10,7 @@
 
 import type { ComponentNode, CanvasConfig } from '@/types';
 import { componentRegistry } from '@store/componentRegistry';
+import { escapeHtml } from '@utils/escapeHtml';
 
 /**
  * 导出模式
@@ -332,16 +333,16 @@ export default GeneratedPage;`;
         return `<div className="${className}" style={${style}} />`;
 
       case 'button':
-        return `<button className="${className}" style={${style}}>${component.content.text || '按钮'}</button>`;
+        return `<button className="${className}" style={${style}}>${escapeHtml(component.content.text || '按钮')}</button>`;
 
       case 'text':
-        return `<p className="${className}" style={${style}}>${component.content.text || '文本内容'}</p>`;
+        return `<p className="${className}" style={${style}}>${escapeHtml(component.content.text || '文本内容')}</p>`;
 
       case 'image':
-        return `<img src="${component.content.src || '/placeholder.png'}" alt="${component.content.alt || ''}" className="${className}" style={${style}} />`;
+        return `<img src="${escapeHtml(component.content.src || '/placeholder.png')}" alt="${escapeHtml(component.content.alt || '')}" className="${className}" style={${style}} />`;
 
       case 'input':
-        return `<input placeholder="${component.content.placeholder || ''}" className="${className}" style={${style}} />`;
+        return `<input placeholder="${escapeHtml(component.content.placeholder || '')}" className="${className}" style={${style}} />`;
 
       case 'radio':
         return this.generateRadioGroup(component, className, style);
@@ -350,7 +351,7 @@ export default GeneratedPage;`;
         return this.generateCheckboxGroup(component, className, style);
 
       case 'tag':
-        return `<span className="${className}" style={${style}}>${component.content.text || '标签'}</span>`;
+        return `<span className="${className}" style={${style}}>${escapeHtml(component.content.text || '标签')}</span>`;
 
       default:
         return `<div className="${className}" style={${style}} />`;
@@ -370,7 +371,7 @@ export default GeneratedPage;`;
         const disabled = option.disabled ? ' disabled' : '';
         return `<label key="${option.id}" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input type="radio" name="${groupName}" value="${option.id}"${checked}${disabled} />
-          <span>${option.label}</span>
+           <span>${escapeHtml(option.label)}</span>
         </label>`;
       })
       .join('\n        ');
@@ -380,9 +381,6 @@ export default GeneratedPage;`;
       </div>`;
   }
 
-  /**
-   * 生成多选按钮组
-   */
   private generateCheckboxGroup(
     component: ComponentNode,
     className: string,
@@ -396,7 +394,7 @@ export default GeneratedPage;`;
         const disabled = option.disabled ? ' disabled' : '';
         return `<label key="${option.id}" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input type="checkbox" value="${option.id}"${checked}${disabled} />
-          <span>${option.label}</span>
+           <span>${escapeHtml(option.label)}</span>
         </label>`;
       })
       .join('\n        ');

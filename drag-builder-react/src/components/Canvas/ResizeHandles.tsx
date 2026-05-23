@@ -155,6 +155,9 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({ component, onResizeEnd })
       e.stopPropagation(); // 阻止事件冒泡到组件节点
       e.preventDefault();
 
+      // 调整大小开始时保存快照，确保撤销能回到原位
+      pushHistory();
+
       setIsResizing(true);
       setActiveHandle(handleType);
       setStartPos({ x: e.clientX, y: e.clientY });
@@ -189,7 +192,7 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({ component, onResizeEnd })
 
       setNestedComponents(relativePositions);
     },
-    [component, components]
+    [component, components, pushHistory]
   );
 
   /**
@@ -567,11 +570,6 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({ component, onResizeEnd })
    */
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      // 结束 resize 时记录历史（支持撤销）
-      if (isResizing) {
-        pushHistory();
-      }
-
       setIsResizing(false);
       setActiveHandle(null);
       // 清除吸附辅助线
@@ -588,7 +586,7 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({ component, onResizeEnd })
         onResizeEnd();
       }
     },
-    [clearSnapLines, onResizeEnd, isResizing, pushHistory]
+    [clearSnapLines, onResizeEnd]
   );
 
   /**

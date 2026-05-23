@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
 import { useComponentStore } from '@store/componentStore';
+import { escapeHtml } from '@utils/escapeHtml';
 
 /**
  * Radio 单选组件定义
@@ -182,7 +183,7 @@ export const radioDefinition: ComponentDefinition = {
           const disabled = option.disabled ? ' disabled' : '';
           return `        <label key="${option.id}" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input type="radio" name="${groupName}" value="${option.id}"${checked}${disabled} />
-          <span>${option.label}</span>
+          <span>${escapeHtml(option.label)}</span>
         </label>`;
         })
         .join('\n');

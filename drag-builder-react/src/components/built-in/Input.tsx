@@ -4,6 +4,7 @@
 
 import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle } from './utils';
+import { escapeHtml } from '@utils/escapeHtml';
 
 /**
  * Input 输入框组件定义
@@ -120,7 +121,7 @@ export const inputDefinition: ComponentDefinition = {
   codeGen: {
     imports: [],
     generateJSX: (component, style) => {
-      const placeholder = String(component.content.placeholder || '');
+      const placeholder = escapeHtml(String(component.content.placeholder || ''));
       return `<input type="text" placeholder="${placeholder}" className="w-full h-full" style={${style}} />`;
     },
   },

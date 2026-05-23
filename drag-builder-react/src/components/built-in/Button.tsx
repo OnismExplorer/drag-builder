@@ -4,6 +4,7 @@
 
 import type { ComponentDefinition } from '@store/componentRegistry';
 import { generateVisualStyle, generateClassName } from './utils';
+import { escapeHtml } from '@utils/escapeHtml';
 
 /**
  * Button 按钮组件定义
@@ -112,7 +113,7 @@ export const buttonDefinition: ComponentDefinition = {
     imports: [],
     generateJSX: (component, style, className) => {
       const cn = className ?? generateClassName(component);
-      const text = String(component.content.text || '按钮');
+      const text = escapeHtml(String(component.content.text || '按钮'));
       return `<button className="${cn}" style={${style}}>${text}</button>`;
     },
   },

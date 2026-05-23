@@ -63,32 +63,37 @@ const EditorPage: React.FC = () => {
   } = useUIStore();
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // 首次创建项目后缓存 projectId，避免每次自动保存都创建新项目
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+
   // 项目名称（可从路由参数或 store 获取，此处使用默认值）
   const projectName = '未命名项目';
 
   /**
    * 保存项目（Ctrl+S 和自动保存共用）
-   * 有 projectId 时更新现有项目，无 projectId 时创建新项目
+   * 有 projectId 时更新现有项目，无 projectId 时创建新项目并缓存返回的 ID
    */
   const isSavingRef = useRef(false);
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     try {
-      if (projectId) {
+      const effectiveId = projectId || createdProjectId;
+      if (effectiveId) {
         // 更新现有项目
-        await updateProject(projectId, {
+        await updateProject(effectiveId, {
           name: projectName,
           canvasConfig: config,
           componentsTree: components,
         });
       } else {
-        // 创建新项目
-        await createProject({
+        // 创建新项目并缓存返回的 ID
+        const newProject = await createProject({
           name: projectName,
           canvasConfig: config,
           componentsTree: components,
         });
+        setCreatedProjectId(newProject.id);
       }
       showToast('保存成功', 'success');
     } catch (error) {
@@ -99,7 +104,7 @@ const EditorPage: React.FC = () => {
     } finally {
       isSavingRef.current = false;
     }
-  }, [components, config, showToast, projectName, projectId]);
+  }, [components, config, showToast, projectName, projectId, createdProjectId]);
 
   /**
    * 注册键盘快捷键（Delete、Ctrl+Z/Y、Ctrl+C/V、Ctrl+S）
@@ -224,6 +229,8 @@ const EditorPage: React.FC = () => {
     // 检查是否是拖拽画布上的组件（不是物料库的组件）
     const activeData = event.active.data.current;
     if (activeData && !activeData.isMaterial) {
+      // 拖拽开始时保存快照，确保撤销能回到原位
+      pushHistory();
       // 开始拖拽组件，显示网格
       setDraggingComponent(true);
       // 设置正在拖拽的组件 ID 和初始偏移量
