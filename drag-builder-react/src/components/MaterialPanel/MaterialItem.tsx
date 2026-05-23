@@ -14,6 +14,7 @@
 import React, { useRef, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { AnimatePresence, motion } from 'framer-motion';
+import * as LucideReact from 'lucide-react';
 import type { MaterialConfig } from '@store/componentRegistry';
 import { getAntdIconSync, isAntdIcon } from '@components/adapters/antd/shared/iconMap';
 import GlareHover from './GlareHover';
@@ -141,6 +142,32 @@ const getComponentIcon = (type: string) => {
 /**
  * 获取组件图标（支持 antd 图标和内置 SVG fallback）
  */
+/**
+ * antd 图标名到 Lucide 图标名的映射（作为 fallback）
+ */
+const ANTD_ICON_TO_LUCIDE: Record<string, string> = {
+  'antd:PlusCircle': 'PlusCircle',
+  'antd:Edit': 'Edit',
+  'antd:Calendar': 'Calendar',
+  'antd:Select': 'CheckSquare',
+  'antd:Table': 'Layout',
+  'antd:Windows': 'Square',
+  'antd:Number': 'Hash',
+  'antd:Switcher': 'ToggleRight',
+  'antd:CheckSquare': 'CheckSquare',
+  'antd:CheckCircle': 'CheckCircle',
+  'antd:Sliders': 'Sliders',
+  'antd:Cluster': 'GitBranch',
+  'antd:NodeIndex': 'GitBranch',
+  'antd:CreditCard': 'CreditCard',
+  'antd:User': 'User',
+  'antd:Crown': 'Award',
+  'antd:Tag': 'Tag',
+  'antd:Sync': 'RefreshCw',
+  'antd:Alert': 'AlertCircle',
+  'antd:FolderOpen': 'FolderOpen',
+};
+
 const getIconNode = (config: MaterialConfig): React.ReactNode => {
   // 优先使用 antd 图标
   if (config.iconSource === 'antd' && isAntdIcon(config.icon)) {
@@ -148,9 +175,21 @@ const getIconNode = (config: MaterialConfig): React.ReactNode => {
     if (IconComponent) {
       return <IconComponent style={{ fontSize: 20 }} />;
     }
+    // antd 图标不在预定义 map 中，尝试映射到 Lucide fallback
+    const lucideName = ANTD_ICON_TO_LUCIDE[config.icon];
+    if (lucideName) {
+      const LucideIcon = LucideReact[lucideName as keyof typeof LucideReact];
+      if (LucideIcon) {
+        return <LucideIcon size={20} />;
+      }
+    }
   }
   // Fallback 到内置 SVG 图标
-  return getComponentIcon(config.type);
+  const svgIcon = getComponentIcon(config.type);
+  if (svgIcon) {
+    return svgIcon;
+  }
+  return null;
 };
 
 export const MaterialItem: React.FC<MaterialItemProps> = ({ config, onHoverChange }) => {
