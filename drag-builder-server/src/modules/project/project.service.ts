@@ -65,7 +65,7 @@ export class ProjectService {
    * @returns 分页后的项目列表
    */
   async findAll(options: FindAllOptions = {}): Promise<PaginatedResult<ProjectEntity>> {
-    const { page = 1, limit = 10, search, userId } = options;
+    const { page = 1, limit = 12, search, userId } = options;
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
