@@ -10,6 +10,9 @@ describe('保存和加载流程', () => {
    * 进入编辑器的辅助函数
    */
   const 进入编辑器 = () => {
+    // 模拟登录状态
+    cy.login();
+
     // 拦截项目列表请求
     cy.intercept('GET', '/api/projects*', {
       statusCode: 200,
@@ -17,6 +20,10 @@ describe('保存和加载流程', () => {
     }).as('获取项目列表');
 
     cy.visit('/');
+
+    // 重置 UI 状态
+    cy.resetUIState();
+
     cy.contains('button', '创建新项目').first().click();
     cy.contains('选择画布规格').should('be.visible');
     cy.contains('桌面').click();
@@ -100,8 +107,10 @@ describe('保存和加载流程', () => {
       },
     }).as('获取项目列表');
 
-    // 访问首页
+    // 模拟登录并访问首页
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
 
     // 等待项目列表加载
     cy.wait('@获取项目列表');
@@ -161,8 +170,10 @@ describe('保存和加载流程', () => {
       },
     }).as('获取单个项目');
 
-    // 访问首页
+    // 模拟登录并访问首页
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
     cy.wait('@获取项目列表');
 
     // 点击项目卡片

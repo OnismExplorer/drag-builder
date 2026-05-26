@@ -12,8 +12,14 @@ declare global {
   namespace Cypress {
     interface Chainable {
       /**
+       * 模拟登录：在 localStorage 中设置认证状态
+       * 必须在 cy.visit() 之前调用
+       */
+      login(): Chainable<void>;
+
+      /**
        * 创建画布：点击"创建新项目"按钮并选择规格
-       * @param preset 画布规格：'mobile' | 'tablet' | 'desktop' | 'custom'
+       * @param preset 画布规格：'手机' | '平板' | '桌面' | '自定义'
        */
       createCanvas(preset?: '手机' | '平板' | '桌面' | '自定义'): Chainable<void>;
 
@@ -33,9 +39,37 @@ declare global {
        * 通过 Zustand store 初始化画布状态（用于跳过 UI 操作）
        */
       initCanvasState(): Chainable<void>;
+
+      /**
+       * 重置 UI 状态（关闭模态框等）
+       * 在访问新页面前调用，确保干净的状态
+       */
+      resetUIState(): Chainable<void>;
     }
   }
 }
+
+/**
+ * 模拟登录命令
+ * 在 localStorage 中设置 token 和 user，使 AuthGuard 放行
+ * 必须在 cy.visit() 之前调用
+ */
+Cypress.Commands.add('login', () => {
+  cy.window().then((win) => {
+    win.localStorage.setItem('drag_builder_token', 'test-token-e2e');
+    win.localStorage.setItem(
+      'drag_builder_user',
+      JSON.stringify({
+        id: 'test-user-001',
+        username: 'testuser',
+        email: 'test@example.com',
+        displayName: '测试用户',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      })
+    );
+  });
+});
 
 /**
  * 创建画布命令
@@ -108,3 +142,22 @@ Cypress.Commands.add('initCanvasState', () => {
 
 // 导出空对象以使 TypeScript 将此文件视为模块
 export {};
+
+/**
+ * 重置 UI 状态命令
+ * 关闭所有模态框，确保测试从干净状态开始
+ */
+Cypress.Commands.add('resetUIState', () => {
+  cy.window().then((win) => {
+    const uiStore = (win as any).useUIStore;
+    if (uiStore && typeof uiStore.getState === 'function') {
+      uiStore.getState().closeCanvasSizeModal();
+      uiStore.getState().closeCodePreview();
+      uiStore.getState().hideToast();
+    }
+    const componentStore = (win as any).useComponentStore;
+    if (componentStore && typeof componentStore.getState === 'function') {
+      componentStore.getState().selectComponent(null);
+    }
+  });
+});

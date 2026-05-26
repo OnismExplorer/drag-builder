@@ -7,6 +7,9 @@
 
 describe('组件拖拽流程', () => {
   beforeEach(() => {
+    // 模拟登录状态
+    cy.login();
+
     // 拦截项目列表请求
     cy.intercept('GET', '/api/projects*', {
       statusCode: 200,
@@ -15,6 +18,9 @@ describe('组件拖拽流程', () => {
 
     // 先访问首页，通过 UI 创建画布，再进入编辑器
     cy.visit('/');
+
+    // 重置 UI 状态
+    cy.resetUIState();
 
     // 点击"创建新项目"，选择桌面规格
     cy.contains('button', '创建新项目').first().click();
@@ -58,7 +64,7 @@ describe('组件拖拽流程', () => {
    */
   it('未选中组件时属性面板应显示空状态提示', () => {
     // 验证属性面板空状态提示
-    cy.contains('请选择一个组件').should('be.visible');
+    cy.contains('从左侧物料库拖拽组件到画布开始创建').should('be.visible');
   });
 
   /**
@@ -66,14 +72,14 @@ describe('组件拖拽流程', () => {
    * 使用 dnd-kit 的数据传输机制模拟拖拽
    */
   it('应能将 Button 组件拖拽到画布', () => {
-    // 获取 Button 物料项
-    const 按钮物料 = cy.contains('Button').closest('div[draggable], div[data-draggable]').first();
+    // 获取包含 "Button" 文本的物料项（div 元素，带有 draggable 属性）
+    cy.contains('Button').parents('.relative.select-none').first().as('按钮物料');
 
     // 获取画布区域
     const 画布区域 = cy.get('.canvas-content');
 
     // 使用 trigger 模拟 pointer 事件（dnd-kit 使用 PointerSensor）
-    按钮物料.trigger('pointerdown', {
+    cy.get('@按钮物料').trigger('pointerdown', {
       button: 0,
       clientX: 140,
       clientY: 300,
@@ -106,7 +112,7 @@ describe('组件拖拽流程', () => {
     cy.get('.canvas-content').click({ force: true });
 
     // 验证属性面板显示空状态（没有组件被选中）
-    cy.contains('请选择一个组件').should('be.visible');
+    cy.contains('从左侧物料库拖拽组件到画布开始创建').should('be.visible');
   });
 
   /**

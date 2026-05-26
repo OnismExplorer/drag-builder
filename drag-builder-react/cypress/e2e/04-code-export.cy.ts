@@ -7,6 +7,9 @@
 
 describe('代码导出流程', () => {
   beforeEach(() => {
+    // 模拟登录状态
+    cy.login();
+
     // 拦截项目列表请求
     cy.intercept('GET', '/api/projects*', {
       statusCode: 200,

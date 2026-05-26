@@ -10,12 +10,16 @@ describe('错误场景处理', () => {
    * 进入编辑器的辅助函数
    */
   const 进入编辑器 = () => {
+    cy.login();
+
     cy.intercept('GET', '/api/projects*', {
       statusCode: 200,
       body: { data: [], total: 0, page: 1, limit: 50 },
     }).as('获取项目列表');
 
     cy.visit('/');
+    cy.resetUIState();
+
     cy.contains('button', '创建新项目').first().click();
     cy.contains('选择画布规格').should('be.visible');
     cy.contains('桌面').click();
@@ -82,7 +86,9 @@ describe('错误场景处理', () => {
     }).as('获取项目列表失败');
 
     // 访问首页
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
 
     // 等待请求失败
     cy.wait('@获取项目列表失败');
@@ -101,7 +107,9 @@ describe('错误场景处理', () => {
       body: { message: '服务器错误' },
     }).as('获取项目列表失败');
 
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
     cy.wait('@获取项目列表失败');
 
     // 验证错误提示显示
@@ -190,7 +198,9 @@ describe('错误场景处理', () => {
     }).as('获取项目失败');
 
     // 访问首页
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
     cy.wait('@获取项目列表');
 
     // 点击项目卡片
