@@ -170,9 +170,9 @@ describe('ProjectService', () => {
         where: {},
         order: { createdAt: 'DESC' },
         skip: 0,
-        take: 10,
+        take: 12,
       });
-      expect(result).toEqual({ data: projects, total: 2, page: 1, limit: 10 });
+      expect(result).toEqual({ data: projects, total: 2, page: 1, limit: 12 });
     });
 
     it('应该正确计算分页偏移量（第 3 页，每页 5 条）', async () => {

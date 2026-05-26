@@ -196,7 +196,7 @@ describe('保存和加载流程', () => {
     // 拦截创建项目请求，延迟响应以观察加载状态
     cy.intercept('POST', '/api/projects', req => {
       req.reply({
-        delay: 1000, // 延迟 1 秒
+        delay: 2000, // 延迟 2 秒
         statusCode: 201,
         body: {
           id: 'new-project-001',
@@ -218,6 +218,9 @@ describe('保存和加载流程', () => {
 
     // 点击保存按钮
     cy.contains('button', '保存项目').click();
+
+    // 给 React 一点时间更新状态
+    cy.wait(200);
 
     // 验证按钮显示"保存中..."状态
     cy.contains('保存中...').should('be.visible');
