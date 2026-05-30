@@ -20,7 +20,7 @@ import { SnappingEngine } from '@utils';
 import { createVirtualGroupComponent } from '@utils/multiSelectBounds';
 import { throttle } from '@utils/timing';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
-import { createProject, updateProject } from '@api';
+import { createProject, updateProject, getProject } from '@api';
 import type { ComponentType, ComponentNode } from '@/types';
 
 /**
@@ -49,9 +49,9 @@ class SmartPointerSensor extends PointerSensor {
 const EditorPage: React.FC = () => {
   const { projectId } = useParams<{ projectId?: string }>();
 
-  const { components, addComponent, updateComponent, selectedIds, pushHistory } =
+  const { components, addComponent, updateComponent, selectedIds, pushHistory, importComponents } =
     useComponentStore();
-  const { zoom, config } = useCanvasStore();
+  const { zoom, config, setConfig, setZoom, setPan } = useCanvasStore();
   const {
     setSnapLines,
     clearSnapLines,
@@ -66,8 +66,8 @@ const EditorPage: React.FC = () => {
   // 首次创建项目后缓存 projectId，避免每次自动保存都创建新项目
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
 
-  // 项目名称（可从路由参数或 store 获取，此处使用默认值）
-  const projectName = '未命名项目';
+  // 项目名称：从加载的项目中获取，新项目使用默认值
+  const [projectName, setProjectName] = useState<string>('未命名项目');
 
   /**
    * 保存项目（Ctrl+S 和自动保存共用）
@@ -105,6 +105,40 @@ const EditorPage: React.FC = () => {
       isSavingRef.current = false;
     }
   }, [components, config, showToast, projectName, projectId, createdProjectId]);
+
+  /**
+   * 加载项目数据
+   * 当 URL 包含 projectId 时，从后端获取项目并恢复画布配置、组件树和项目名称
+   * 仅在首次挂载时执行，避免重复加载
+   */
+  useEffect(() => {
+    if (!projectId) return;
+
+    let cancelled = false;
+
+    const loadProject = async () => {
+      try {
+        const project = await getProject(projectId);
+        if (cancelled) return;
+
+        setConfig(project.canvasConfig);
+        setZoom(1.0);
+        setPan({ x: 0, y: 0 });
+        importComponents(project.componentsTree);
+        setProjectName(project.name);
+      } catch (error) {
+        console.error('[EditorPage] 加载项目失败:', error);
+        showToast('加载项目失败', 'error');
+      }
+    };
+
+    loadProject();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   /**
    * 注册键盘快捷键（Delete、Ctrl+Z/Y、Ctrl+C/V、Ctrl+S）
