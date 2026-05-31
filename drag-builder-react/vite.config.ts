@@ -26,6 +26,12 @@ export default defineConfig({
   server: {
     port: 5173, // 指定启动端口
     strictPort: false, // 设为 false：当端口被占用时，自动尝试下一个可用端口（如 5174、5175...）
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
   test: {
     globals: true,

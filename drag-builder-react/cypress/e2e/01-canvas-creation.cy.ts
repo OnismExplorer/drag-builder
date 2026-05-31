@@ -7,6 +7,9 @@
 
 describe('画布创建流程', () => {
   beforeEach(() => {
+    // 模拟登录状态
+    cy.login();
+
     // 拦截项目列表请求，返回空列表（避免依赖后端）
     cy.intercept('GET', '/api/projects*', {
       statusCode: 200,
@@ -15,6 +18,17 @@ describe('画布创建流程', () => {
 
     // 访问首页
     cy.visit('/');
+
+    // 等待页面加载完成
+    cy.contains('DragBuilder').should('be.visible');
+
+    // 如果模态框是打开的（从上一个测试残留），关闭它
+    cy.get('body').then($body => {
+      if ($body.find('.modal-overlay, [class*="backdrop-blur-sm"]').length > 0) {
+        cy.get('body').type('{esc}');
+        cy.contains('选择画布规格').should('not.exist');
+      }
+    });
   });
 
   /**

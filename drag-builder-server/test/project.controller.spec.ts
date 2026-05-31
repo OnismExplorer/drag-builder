@@ -27,7 +27,7 @@ function makePaginated(
   data: ProjectEntity[],
   total = data.length,
   page = 1,
-  limit = 10
+  limit = 12
 ): PaginatedResult<ProjectEntity> {
   return { data, total, page, limit };
 }
@@ -91,11 +91,11 @@ describe('ProjectController', () => {
       const paginated = makePaginated([makeProject()]);
       service.findAll.mockResolvedValue(paginated);
 
-      const result = await controller.findAll(1, 10, undefined, mockRequest);
+      const result = await controller.findAll(1, 12, undefined, mockRequest);
 
       expect(service.findAll).toHaveBeenCalledWith({
         page: 1,
-        limit: 10,
+        limit: 12,
         search: undefined,
         userId: 'user-uuid-0000',
       });
@@ -118,11 +118,11 @@ describe('ProjectController', () => {
     it('应该将搜索关键词传递给 service', async () => {
       service.findAll.mockResolvedValue(makePaginated([]));
 
-      await controller.findAll(1, 10, '登录页', mockRequest);
+      await controller.findAll(1, 12, '登录页', mockRequest);
 
       expect(service.findAll).toHaveBeenCalledWith({
         page: 1,
-        limit: 10,
+        limit: 12,
         search: '登录页',
         userId: 'user-uuid-0000',
       });
@@ -131,7 +131,7 @@ describe('ProjectController', () => {
     it('应该返回空列表当没有项目时', async () => {
       service.findAll.mockResolvedValue(makePaginated([], 0));
 
-      const result = await controller.findAll(1, 10, undefined, mockRequest);
+      const result = await controller.findAll(1, 12, undefined, mockRequest);
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);

@@ -1,18 +1,29 @@
 /**
  * ProjectList 组件
- * 显示用户的项目列表，支持加载和创建项目
+ * 显示用户的项目列表，支持加载和创建项目，分页浏览
  *
  * 需求：10.6, 10.7, 10.8
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Plus, Clock, FolderOpen, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  Layers,
+  Plus,
+  Clock,
+  FolderOpen,
+  AlertCircle,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { getProjects, getProject } from '@api/projectApi';
 import type { Project } from '@/types/project';
 import { useCanvasStore } from '@store/canvasStore';
 import { useComponentStore } from '@store/componentStore';
 import { useUIStore } from '@store/uiStore';
+
+const PAGE_SIZE = 12;
 
 /**
  * 格式化时间为相对时间字符串
@@ -104,6 +115,7 @@ function ProjectCard({ project, onLoad, isLoading }: ProjectCardProps) {
         <h3 className="font-semibold text-slate-900 tracking-tight truncate group-hover:text-orange-600 transition-colors">
           {project.name}
         </h3>
+
         <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
           <Clock className="w-3 h-3 flex-shrink-0" />
           <span>{formatRelativeTime(project.updatedAt)}</span>
@@ -118,8 +130,52 @@ function ProjectCard({ project, onLoad, isLoading }: ProjectCardProps) {
 }
 
 /**
+ * 分页控件组件
+ */
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+function Pagination({ currentPage, totalPages, onPrev, onNext }: PaginationProps) {
+  return (
+    <div className="flex items-center justify-center gap-3 mt-8">
+      <button
+        onClick={onPrev}
+        disabled={currentPage <= 1}
+        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-slate-600
+                   bg-white border border-slate-200 rounded-lg hover:bg-slate-50
+                   disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        aria-label="上一页"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        上一页
+      </button>
+
+      <span className="text-sm text-slate-500 font-medium">
+        第 <span className="text-orange-600 font-bold">{currentPage}</span> / {totalPages} 页
+      </span>
+
+      <button
+        onClick={onNext}
+        disabled={currentPage >= totalPages}
+        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-slate-600
+                   bg-white border border-slate-200 rounded-lg hover:bg-slate-50
+                   disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        aria-label="下一页"
+      >
+        下一页
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+/**
  * ProjectList 主组件
- * 显示项目列表，支持加载和创建项目
+ * 显示项目列表，支持加载和创建项目，分页浏览
  *
  * 需求：10.6, 10.7, 10.8
  */
@@ -134,15 +190,23 @@ export default function ProjectList() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
 
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProjects, setTotalProjects] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(totalProjects / PAGE_SIZE));
+
   /**
-   * 获取项目列表
+   * 获取项目列表（支持分页）
+   * @param page 页码（从 1 开始）
    */
-  const fetchProjects = useCallback(async () => {
+  const fetchProjects = useCallback(async (page: number) => {
     setIsFetching(true);
     setFetchError(null);
     try {
-      const response = await getProjects({ limit: 50 });
+      const response = await getProjects({ page, limit: PAGE_SIZE });
       setProjects(response.data);
+      setTotalProjects(response.total);
+      setCurrentPage(page);
     } catch {
       setFetchError('无法加载项目列表，请检查网络连接');
     } finally {
@@ -151,8 +215,20 @@ export default function ProjectList() {
   }, []);
 
   useEffect(() => {
-    fetchProjects();
+    fetchProjects(1);
   }, [fetchProjects]);
+
+  const handlePrevPage = useCallback(() => {
+    if (currentPage > 1) {
+      fetchProjects(currentPage - 1);
+    }
+  }, [currentPage, fetchProjects]);
+
+  const handleNextPage = useCallback(() => {
+    if (currentPage < totalPages) {
+      fetchProjects(currentPage + 1);
+    }
+  }, [currentPage, totalPages, fetchProjects]);
 
   /**
    * 加载项目到编辑器
@@ -193,9 +269,10 @@ export default function ProjectList() {
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">我的项目</h1>
           {!isFetching && !fetchError && (
-            <p className="mt-1 text-sm text-slate-400">共 {projects.length} 个项目</p>
+            <p className="mt-1 text-sm text-slate-400">共 {totalProjects} 个项目</p>
           )}
         </div>
+
         <button
           onClick={openCanvasSizeModal}
           className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white text-sm font-bold
@@ -231,10 +308,11 @@ export default function ProjectList() {
           <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
             <AlertCircle className="w-7 h-7 text-red-500" />
           </div>
+
           <p className="text-slate-600 font-medium mb-1">{fetchError}</p>
           <p className="text-sm text-slate-400 mb-6">后端服务可能未启动</p>
           <button
-            onClick={fetchProjects}
+            onClick={() => fetchProjects(currentPage)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600
                        bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
           >
@@ -250,10 +328,12 @@ export default function ProjectList() {
           <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-5">
             <FolderOpen className="w-8 h-8 text-orange-400" />
           </div>
+
           <h3 className="text-lg font-semibold text-slate-700 mb-2">暂无项目</h3>
           <p className="text-sm text-slate-400 mb-8 max-w-xs">
             从左侧拖拽组件开始设计，或点击下方按钮创建你的第一个项目
           </p>
+
           <button
             onClick={openCanvasSizeModal}
             className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white text-sm font-bold
@@ -267,45 +347,58 @@ export default function ProjectList() {
 
       {/* 项目列表 */}
       {!isFetching && !fetchError && projects.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* 新建项目卡片 */}
-          <button
-            onClick={openCanvasSizeModal}
-            className="group h-full min-h-[200px] flex flex-col items-center justify-center gap-3
-                       border-2 border-dashed border-slate-200 rounded-2xl
-                       hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-200
-                       focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-          >
-            <div
-              className="w-10 h-10 bg-slate-100 group-hover:bg-orange-100 rounded-xl
-                            flex items-center justify-center transition-colors"
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* 新建项目卡片 */}
+            <button
+              onClick={openCanvasSizeModal}
+              className="group h-full min-h-[200px] flex flex-col items-center justify-center gap-3
+                         border-2 border-dashed border-slate-200 rounded-2xl
+                         hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-200
+                         focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
-              <Plus className="w-5 h-5 text-slate-400 group-hover:text-orange-600 transition-colors" />
-            </div>
-            <span className="text-sm font-semibold text-slate-400 group-hover:text-orange-600 transition-colors">
-              新建项目
-            </span>
-          </button>
+              <div
+                className="w-10 h-10 bg-slate-100 group-hover:bg-orange-100 rounded-xl
+                            flex items-center justify-center transition-colors"
+              >
+                <Plus className="w-5 h-5 text-slate-400 group-hover:text-orange-600 transition-colors" />
+              </div>
 
-          {/* 项目卡片列表 */}
-          {projects.map(project => (
-            <div key={project.id} className="relative">
-              {/* 加载遮罩 */}
-              {loadingProjectId === project.id && (
-                <div
-                  className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm rounded-2xl
-                                flex items-center justify-center"
-                >
-                  <div className="flex items-center gap-2 text-sm font-medium text-orange-600">
-                    <Layers className="w-4 h-4 animate-spin" />
-                    加载中...
+              <span className="text-sm font-semibold text-slate-400 group-hover:text-orange-600 transition-colors">
+                新建项目
+              </span>
+            </button>
+
+            {/* 项目卡片列表 */}
+            {projects.map(project => (
+              <div key={project.id} className="relative">
+                {/* 加载遮罩 */}
+                {loadingProjectId === project.id && (
+                  <div
+                    className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm rounded-2xl
+                                  flex items-center justify-center"
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium text-orange-600">
+                      <Layers className="w-4 h-4 animate-spin" />
+                      加载中...
+                    </div>
                   </div>
-                </div>
-              )}
-              <ProjectCard project={project} onLoad={handleLoadProject} isLoading={isLoading} />
-            </div>
-          ))}
-        </div>
+                )}
+                <ProjectCard project={project} onLoad={handleLoadProject} isLoading={isLoading} />
+              </div>
+            ))}
+          </div>
+
+          {/* 分页控件 */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrev={handlePrevPage}
+              onNext={handleNextPage}
+            />
+          )}
+        </>
       )}
     </div>
   );

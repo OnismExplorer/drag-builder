@@ -20,3 +20,25 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>
 );
+
+// 暴露 stores 到 window 对象，供 Cypress E2E 测试使用
+import { useUIStore } from '@/store/uiStore';
+import { useAuthStore } from '@/store/authStore';
+import { useCanvasStore } from '@/store/canvasStore';
+import { useComponentStore } from '@/store/componentStore';
+
+declare global {
+  interface Window {
+    useUIStore: typeof useUIStore;
+    useAuthStore: typeof useAuthStore;
+    useCanvasStore: typeof useCanvasStore;
+    useComponentStore: typeof useComponentStore;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.useUIStore = useUIStore;
+  window.useAuthStore = useAuthStore;
+  window.useCanvasStore = useCanvasStore;
+  window.useComponentStore = useComponentStore;
+}

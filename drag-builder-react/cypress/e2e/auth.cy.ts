@@ -1,22 +1,18 @@
 describe('认证系统', () => {
-  beforeEach(() => {
-    cy.visit('/');
-  });
-
   describe('未登录访问', () => {
-    it('应显示 Landing Page', () => {
-      cy.contains('快速构建你的').should('be.visible');
-      cy.contains('立即体验').should('be.visible');
-    });
-
-    it('点击立即体验应跳转到注册页', () => {
-      cy.contains('立即体验').click();
-      cy.url().should('include', '/register');
-    });
-
-    it('点击登录应跳转到登录页', () => {
-      cy.contains('登录').first().click();
+    it('应重定向到登录页', () => {
+      cy.visit('/');
       cy.url().should('include', '/login');
+    });
+
+    it('访问受保护路由应重定向到登录页', () => {
+      cy.visit('/editor');
+      cy.url().should('include', '/login');
+    });
+
+    it('登录页应显示登录表单', () => {
+      cy.visit('/login');
+      cy.contains('登录').should('be.visible');
     });
   });
 

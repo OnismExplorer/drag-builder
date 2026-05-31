@@ -10,6 +10,9 @@ describe('保存和加载流程', () => {
    * 进入编辑器的辅助函数
    */
   const 进入编辑器 = () => {
+    // 模拟登录状态
+    cy.login();
+
     // 拦截项目列表请求
     cy.intercept('GET', '/api/projects*', {
       statusCode: 200,
@@ -17,6 +20,10 @@ describe('保存和加载流程', () => {
     }).as('获取项目列表');
 
     cy.visit('/');
+
+    // 重置 UI 状态
+    cy.resetUIState();
+
     cy.contains('button', '创建新项目').first().click();
     cy.contains('选择画布规格').should('be.visible');
     cy.contains('桌面').click();
@@ -100,8 +107,10 @@ describe('保存和加载流程', () => {
       },
     }).as('获取项目列表');
 
-    // 访问首页
+    // 模拟登录并访问首页
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
 
     // 等待项目列表加载
     cy.wait('@获取项目列表');
@@ -161,8 +170,10 @@ describe('保存和加载流程', () => {
       },
     }).as('获取单个项目');
 
-    // 访问首页
+    // 模拟登录并访问首页
+    cy.login();
     cy.visit('/');
+    cy.resetUIState();
     cy.wait('@获取项目列表');
 
     // 点击项目卡片
@@ -185,7 +196,7 @@ describe('保存和加载流程', () => {
     // 拦截创建项目请求，延迟响应以观察加载状态
     cy.intercept('POST', '/api/projects', req => {
       req.reply({
-        delay: 1000, // 延迟 1 秒
+        delay: 2000, // 延迟 2 秒
         statusCode: 201,
         body: {
           id: 'new-project-001',
@@ -207,6 +218,9 @@ describe('保存和加载流程', () => {
 
     // 点击保存按钮
     cy.contains('button', '保存项目').click();
+
+    // 给 React 一点时间更新状态
+    cy.wait(200);
 
     // 验证按钮显示"保存中..."状态
     cy.contains('保存中...').should('be.visible');

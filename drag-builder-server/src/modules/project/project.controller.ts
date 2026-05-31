@@ -48,10 +48,14 @@ export class ProjectController {
   @Get()
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
     @Query('search') search?: string,
     @Req() req?: RequestWithUser
   ): Promise<PaginatedResult<ProjectEntity>> {
+    // Validate page parameter: must be >= 1, otherwise default to 1
+    if (page < 1) {
+      page = 1;
+    }
     const userId = req?.user?.userId;
     return this.projectService.findAll({ page, limit, search, userId });
   }

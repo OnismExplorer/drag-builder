@@ -50,7 +50,7 @@ function createMockProjectListResponse(projects: Project[]): ProjectListResponse
     data: projects,
     total: projects.length,
     page: 1,
-    limit: 50,
+    limit: 12,
   };
 }
 
@@ -621,7 +621,7 @@ describe('ProjectList 组件', () => {
       });
     });
 
-    it('应以 limit: 50 参数调用 getProjects', async () => {
+    it('应以 limit: 12 参数调用 getProjects', async () => {
       const getProjectsSpy = vi
         .spyOn(projectApi, 'getProjects')
         .mockResolvedValueOnce(createMockProjectListResponse([]));
@@ -629,7 +629,7 @@ describe('ProjectList 组件', () => {
       renderProjectList();
 
       await waitFor(() => {
-        expect(getProjectsSpy).toHaveBeenCalledWith({ limit: 50 });
+        expect(getProjectsSpy).toHaveBeenCalledWith({ limit: 12, page: 1 });
       });
     });
   });

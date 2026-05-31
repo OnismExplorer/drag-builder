@@ -1,6 +1,6 @@
 /**
  * DragBuilder 主应用组件
- * 配置路由：/ (首页), /editor (编辑器), /test (拖拽测试)
+ * 配置路由：/ (首页), /editor (编辑器)
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -10,6 +10,7 @@ import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import GithubCallbackPage from '@/pages/GithubCallbackPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 import { ResponsiveGuard } from '@/components/ResponsiveGuard/ResponsiveGuard';
 import ErrorBoundary from '@/components/ErrorBoundary/ErrorBoundary';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
@@ -50,6 +51,7 @@ function App() {
               </AuthGuard>
             }
           />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
 
         {/* 全局组件 */}

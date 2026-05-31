@@ -222,7 +222,7 @@ describe('Project API 集成测试', () => {
       expect(res.body.data).toHaveLength(2);
       expect(res.body.total).toBe(2);
       expect(res.body.page).toBe(1);
-      expect(res.body.limit).toBe(10);
+      expect(res.body.limit).toBe(12);
     });
 
     it('应该支持自定义分页参数', async () => {
